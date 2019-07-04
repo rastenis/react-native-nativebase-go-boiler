@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Boiler",
+    "slug": "boiler",
+    "privacy": "public",
+    "sdkVersion": "33.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./src/client/assets/icon.png",
+    "splash": {
+      "image": "./src/client/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "./src/client/**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}

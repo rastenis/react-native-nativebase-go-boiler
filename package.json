@@ -1,0 +1,45 @@
+{
+  "name": "react-native-semantic-go-rethinkdb-oauth2-boiler",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/client/AppEntry.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "eject": "expo eject"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@repo.hepha.co.uk:23344/root/react-native-semantic-go-rethinkdb-oauth2-boiler.git"
+  },
+  "keywords": [
+    "react",
+    "native",
+    "semanticui",
+    "golang",
+    "go",
+    "rethinkdb",
+    "oauth",
+    "oauth2",
+    "boilerplate",
+    "boiler"
+  ],
+  "author": "Scharkee",
+  "license": "ISC",
+  "dependencies": {
+    "expo": "^33.0.0",
+    "react": "16.8.3",
+    "react-dom": "^16.8.6",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
+    "react-native-web": "^0.11.4"
+  },
+  "devDependencies": {
+    "babel-preset-expo": "^5.1.1"
+  },
+  "private": true
+}
