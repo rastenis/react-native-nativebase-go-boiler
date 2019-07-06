@@ -32,6 +32,8 @@ func init() {
 		MaxAge:   3600 * 8, // 8 hours
 		HttpOnly: true,
 	}
+
+	TestDb()
 }
 
 func main() {
