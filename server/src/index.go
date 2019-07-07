@@ -166,6 +166,58 @@ func main() {
 		res.Write(response)
 	})
 
+	router.HandleFunc("/api/register", func(res http.ResponseWriter, req *http.Request) {
+		// decoding userdata
+		decoder := json.NewDecoder(req.Body)
+		var postedUserData user
+		err := decoder.Decode(&postedUserData)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		log.Printf("Registering user: %s", postedUserData.Email)
+
+		res.Header().Set("Content-Type", "application/json")
+
+		// checking for duplicates
+		ctx := context.Background()
+		foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": postedUserData.Email})
+		var dupe user
+		decodeError := foundUser.Decode(&dupe)
+		if decodeError == nil {
+			log.Println("Registration failed. Duplicate user.")
+			response, _ := json.Marshal(Response{false, "An user with that email already exists!"})
+			res.Write(response)
+			return
+		}
+
+		// hashing password
+		hashed, _ := bcrypt.GenerateFromPassword([]byte(postedUserData.Password), 12)
+		hashedConverted := string(hashed)
+
+		// inserting user
+		creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": postedUserData.Email, "password": hashedConverted})
+		log.Println(creationResult)
+		if creationError != nil {
+			log.Panicln(creationError)
+		}
+
+		log.Println("Registration successful.")
+
+		// setting session data
+		session, _ := store.Get(req, "boiler-session")
+		session.Values["auth"] = true // now able to get users in the index page
+		if err = sessions.Save(req, res); err != nil {
+			log.Printf("Error saving session: %v", err)
+		}
+
+		// sending a success response
+		response, err := json.Marshal(Response{true, "Successfully registered!"})
+		if err != nil {
+			log.Println("Could not marshal response")
+		}
+		res.Write(response)
+	})
 	log.Println("Listening on port 8080")
 	http.ListenAndServe(":8080", router)
 }
