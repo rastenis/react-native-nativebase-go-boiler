@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Person : stores a single person's data
@@ -33,7 +35,6 @@ func init() {
 		HttpOnly: true,
 	}
 
-	TestDb()
 }
 
 func main() {
@@ -42,14 +43,12 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	log.Print(securecookie.GenerateRandomKey(16),
-		securecookie.GenerateRandomKey(16))
+	DBSetup()
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
 		// gettinng the session
 		session, _ := store.Get(req, "boiler-session")
-
 		session.Values["testing"] = "session storage"
 		// Save.
 		if err = sessions.Save(req, res); err != nil {
@@ -61,8 +60,6 @@ func main() {
 
 	router.HandleFunc("/session", func(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Retreiving session...")
-		session, _ := store.Get(req, "boiler-session")
-		log.Print(session.Values["testing"])
 
 		// send back the session + static data
 		sessionData := SessionData{[]Person{{"Jack Hill", 421}, {"Jack Wright", 212}}, true}
@@ -71,6 +68,9 @@ func main() {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		ctx := context.Background()
+		DB.Collection("test").InsertOne(ctx, bson.M{"testing": "db"})
 
 		res.Header().Set("Content-Type", "application/json")
 		res.Write(js)
