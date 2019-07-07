@@ -218,6 +218,19 @@ func main() {
 		}
 		res.Write(response)
 	})
+
+	router.HandleFunc("/api/logout", func(res http.ResponseWriter, req *http.Request) {
+
+		// deleting session
+		session, _ := store.Get(req, "boiler-session")
+		session.Options.MaxAge = -1
+		if err = sessions.Save(req, res); err != nil {
+			log.Printf("Error saving session: %v", err)
+		}
+
+		res.WriteHeader(http.StatusOK)
+	})
+
 	log.Println("Listening on port 8080")
 	http.ListenAndServe(":8080", router)
 }
