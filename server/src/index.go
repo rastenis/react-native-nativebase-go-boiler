@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Person : stores a single person's data
@@ -24,6 +25,17 @@ type Person struct {
 type SessionData struct {
 	People []Person
 	Auth   bool
+}
+
+// Response : used for returning status data to user
+type Response struct {
+	Success bool
+	Msg     string
+}
+
+type user struct {
+	email    string
+	password string
 }
 
 var store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
@@ -68,13 +80,48 @@ func main() {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		ctx := context.Background()
-		DB.Collection("test").InsertOne(ctx, bson.M{"testing": "db"})
+		log.Println(sessionData.Auth)
 
 		res.Header().Set("Content-Type", "application/json")
 		res.Write(js)
 	})
 
+	router.HandleFunc("/api/auth", func(res http.ResponseWriter, req *http.Request) {
+		err := req.ParseForm()
+		if err != nil {
+			log.Println("Could not parse form.")
+		}
+		log.Println("Logging in user:", req.Form.Get("email"))
+		res.Header().Set("Content-Type", "application/json")
+
+		// fetching user
+		ctx := context.Background()
+		foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": req.Form.Get("email")})
+		var u user
+		decodeError := foundUser.Decode(&u)
+		if decodeError != nil {
+			log.Println("Login failed. No user.")
+			response, _ := json.Marshal(Response{false, "Invalid login details!"})
+			res.Write(response)
+			return
+		}
+
+		// checking password
+		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.password), []byte(req.Form.Get("password")))
+		if comparisonError == nil {
+			log.Println("Login failed.")
+			response, _ := json.Marshal(Response{false, "Invalid login details!"})
+			res.Write(response)
+			return
+		}
+		log.Println("Login successful.")
+
+		response, err := json.Marshal(Response{true, "Successfully logged in!"})
+		if err != nil {
+			log.Println("Could not marshal response")
+		}
+		res.Write(response)
+
+	})
 	http.ListenAndServe(":8080", router)
 }

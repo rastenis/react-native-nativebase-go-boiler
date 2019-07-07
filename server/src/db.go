@@ -23,7 +23,6 @@ func DBSetup() {
 }
 
 func configDB(ctx context.Context) (*mongo.Database, error) {
-	fmt.Println(os.Getenv("MONGO_CONNECTION_STRING"))
 	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_CONNECTION_STRING")))
 	if err != nil {
 		return nil, fmt.Errorf("ouldn't connect to mongo: %v", err)
