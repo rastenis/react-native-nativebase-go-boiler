@@ -23,8 +23,8 @@ type Person struct {
 
 // SessionData : to send back session data
 type SessionData struct {
-	People []Person
-	Auth   bool
+	// User ~~userdata
+	Auth bool
 }
 
 // Response : used for returning status data to user
@@ -34,8 +34,8 @@ type Response struct {
 }
 
 type user struct {
-	email    string
-	password string
+	Email    string
+	Password string
 }
 
 var store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
@@ -46,7 +46,6 @@ func init() {
 		MaxAge:   3600 * 8, // 8 hours
 		HttpOnly: true,
 	}
-
 }
 
 func main() {
@@ -55,26 +54,20 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	// setting up database
 	DBSetup()
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		// gettinng the session
-		session, _ := store.Get(req, "boiler-session")
-		session.Values["testing"] = "session storage"
-		// Save.
-		if err = sessions.Save(req, res); err != nil {
-			log.Printf("Error saving session: %v", err)
-		}
-
 		fmt.Fprint(res, "This is the index page.")
 	})
 
 	router.HandleFunc("/session", func(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Retreiving session...")
 
-		// send back the session + static data
-		sessionData := SessionData{[]Person{{"Jack Hill", 421}, {"Jack Wright", 212}}, true}
+		// send back the session data
+		session, _ := store.Get(req, "boiler-session")
+		sessionData := SessionData{session.Values["auth"].(bool)}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -87,19 +80,25 @@ func main() {
 	})
 
 	router.HandleFunc("/api/auth", func(res http.ResponseWriter, req *http.Request) {
-		err := req.ParseForm()
+		// decoding userdata
+		decoder := json.NewDecoder(req.Body)
+		var postedUserData user
+		err := decoder.Decode(&postedUserData)
 		if err != nil {
-			log.Println("Could not parse form.")
+			log.Panicln(err)
 		}
-		log.Println("Logging in user:", req.Form.Get("email"))
+
+		log.Printf("Logging in user: %s", postedUserData.Email)
+
 		res.Header().Set("Content-Type", "application/json")
 
 		// fetching user
 		ctx := context.Background()
-		foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": req.Form.Get("email")})
+		foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": postedUserData.Email})
 		var u user
 		decodeError := foundUser.Decode(&u)
 		if decodeError != nil {
+			log.Println(decodeError)
 			log.Println("Login failed. No user.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
 			res.Write(response)
@@ -107,21 +106,31 @@ func main() {
 		}
 
 		// checking password
-		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.password), []byte(req.Form.Get("password")))
+		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.Form.Get("password")))
 		if comparisonError == nil {
-			log.Println("Login failed.")
+			log.Println("Login failed. Wrong password.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
 			res.Write(response)
 			return
 		}
+
 		log.Println("Login successful.")
 
+		// setting session data
+		session, _ := store.Get(req, "boiler-session")
+		session.Values["auth"] = true // now able to get users in the index page
+		if err = sessions.Save(req, res); err != nil {
+			log.Printf("Error saving session: %v", err)
+		}
+
+		// sending a success response
 		response, err := json.Marshal(Response{true, "Successfully logged in!"})
 		if err != nil {
 			log.Println("Could not marshal response")
 		}
 		res.Write(response)
-
 	})
+
+	log.Println("Listening on port 8080")
 	http.ListenAndServe(":8080", router)
 }
