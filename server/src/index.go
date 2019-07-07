@@ -21,6 +21,11 @@ type Person struct {
 	Number int
 }
 
+// People :
+type people struct {
+	People []Person
+}
+
 // SessionData : to send back session data
 type SessionData struct {
 	// User ~~userdata
@@ -67,13 +72,43 @@ func main() {
 
 		// send back the session data
 		session, _ := store.Get(req, "boiler-session")
-		sessionData := SessionData{session.Values["auth"].(bool)}
+		log.Println(session.Values["auth"])
+		authStatus, ok := session.Values["auth"].(bool)
+		if !ok {
+			log.Println("Couldnt cast session auth to bool.")
+		}
+		sessionData := SessionData{authStatus}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		log.Println(sessionData.Auth)
+
+		res.Header().Set("Content-Type", "application/json")
+		res.Write(js)
+	})
+
+	router.HandleFunc("/user", func(res http.ResponseWriter, req *http.Request) {
+		fmt.Println("Retreiving users...")
+
+		// send back the session data
+		session, _ := store.Get(req, "boiler-session")
+		log.Println(session.Values["auth"])
+		authStatus, ok := session.Values["auth"].(bool)
+		if !ok || !authStatus {
+			log.Println("Couldnt cast session auth to bool. Unauthorized.")
+			res.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		ppl := people{[]Person{{"Jack Hill", 421}, {"Jack Wright", 212}}}
+
+		js, err := json.Marshal(ppl)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		res.Header().Set("Content-Type", "application/json")
 		res.Write(js)
