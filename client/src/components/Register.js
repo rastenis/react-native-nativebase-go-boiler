@@ -1,13 +1,14 @@
 import React, { Component } from "react";
 import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Left, Right, Icon, Body, Title } from 'native-base';
 
-export class Login extends Component {
+export class Register extends Component {
   constructor(...args) {
     super(...args);
 
     this.state = {
       email: "",
-      password: ""
+      password: "",
+      passwordConf: ""
     };
   }
 
@@ -15,8 +16,7 @@ export class Login extends Component {
     this.setState({ [e.target.name]: e.target.value });
   };
 
-  submitLogin = () => {
-    // submit login
+  submitRegistration = () => {
   };
 
   render() {
@@ -31,7 +31,7 @@ export class Login extends Component {
             </Button>
           </Left>
           <Body>
-            <Title>Login</Title>
+            <Title>Register</Title>
           </Body>
           <Right />
         </Header>
@@ -68,11 +68,27 @@ export class Login extends Component {
                 value={this.state.password}
               />
             </Item>
+
+            <Item>
+              <Label htmlFor="passwordField">
+                Confirm password
+            </Label>
+            </Item>
+            <Item>
+              <Input
+                id="passwordConfField"
+                name="passwordConf"
+                type="password"
+                placeholder="Confirm password"
+                onChange={this.onChange}
+                value={this.state.passwordConf}
+              />
+            </Item>
             <Item>
               <Button
                 type="button"
                 onClick={this.submitLogin}
-                primary
+                info
                 style={{ width: "100%" }}
               >
                 <Text>Submit</Text>
