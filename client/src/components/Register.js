@@ -35,13 +35,11 @@ export class Register extends Component {
           </Body>
           <Right />
         </Header>
-        <Content>
+        <Content padder>
           <Form>
-            <Item>
-              <Label htmlFor="emailField">
-                Email
+            <Label htmlFor="emailField">
+              Email
             </Label>
-            </Item>
 
             <Item>
               <Input
@@ -53,11 +51,9 @@ export class Register extends Component {
                 value={this.state.email}
               />
             </Item>
-            <Item>
-              <Label htmlFor="passwordField">
-                Password
+            <Label htmlFor="passwordField">
+              Password
             </Label>
-            </Item>
             <Item>
               <Input
                 id="passwordField"
@@ -68,12 +64,9 @@ export class Register extends Component {
                 value={this.state.password}
               />
             </Item>
-
-            <Item>
-              <Label htmlFor="passwordField">
-                Confirm password
+            <Label htmlFor="passwordField">
+              Confirm password
             </Label>
-            </Item>
             <Item>
               <Input
                 id="passwordConfField"
@@ -84,16 +77,14 @@ export class Register extends Component {
                 value={this.state.passwordConf}
               />
             </Item>
-            <Item>
-              <Button
-                type="button"
-                onClick={this.submitLogin}
-                info
-                style={{ width: "100%" }}
-              >
-                <Text>Submit</Text>
-              </Button>
-            </Item>
+            <Button
+              type="button"
+              onClick={this.submitLogin}
+              full rounded info
+              style={{ marginTop: 10 }}
+            >
+              <Text>Submit</Text>
+            </Button>
           </Form>
         </Content>
       </Container >

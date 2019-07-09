@@ -35,14 +35,11 @@ export class Login extends Component {
           </Body>
           <Right />
         </Header>
-        <Content>
+        <Content padder>
           <Form>
-            <Item>
-              <Label htmlFor="emailField">
-                Email
+            <Label htmlFor="emailField">
+              Email
             </Label>
-            </Item>
-
             <Item>
               <Input
                 id="emailField"
@@ -53,11 +50,9 @@ export class Login extends Component {
                 value={this.state.email}
               />
             </Item>
-            <Item>
-              <Label htmlFor="passwordField">
-                Password
+            <Label htmlFor="passwordField">
+              Password
             </Label>
-            </Item>
             <Item>
               <Input
                 id="passwordField"
@@ -68,16 +63,14 @@ export class Login extends Component {
                 value={this.state.password}
               />
             </Item>
-            <Item>
-              <Button
-                type="button"
-                onClick={this.submitLogin}
-                primary
-                style={{ width: "100%" }}
-              >
-                <Text>Submit</Text>
-              </Button>
-            </Item>
+            <Button
+              type="button"
+              onClick={this.submitLogin}
+              full rounded primary
+              style={{ marginTop: 10 }}
+            >
+              <Text>Submit</Text>
+            </Button>
           </Form>
         </Content>
       </Container >
