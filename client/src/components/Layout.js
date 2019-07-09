@@ -1,4 +1,4 @@
-import { Home } from "./Home"
+import { Navigator } from "./Navigator"
 import { Container } from 'native-base';
 import React, { Component } from "react";
 import { AppLoading } from "expo";
@@ -27,9 +27,7 @@ export class Layout extends Component {
       );
     }
     return (
-      <Container>
-        <Home />
-      </Container>
+      <Navigator />
     );
   }
 }

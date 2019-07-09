@@ -1,6 +1,7 @@
 import React from "react";
 import { Container, Header, Title, Left, Icon, Right, Button, Body, Content, Text, Card, CardItem } from "native-base";
-export default class Home extends React.Component {
+export class Home extends React.Component {
+
   render() {
     return (
       <Container>
@@ -8,7 +9,7 @@ export default class Home extends React.Component {
           <Left>
             <Button
               transparent
-              onPress={() => this.props.navigation.navigate("DrawerOpen")}>
+              onPress={() => this.props.navigation.openDrawer()}>
               <Icon name="menu" />
             </Button>
           </Left>

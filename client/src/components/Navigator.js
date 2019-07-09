@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import { Home } from "./Home.js";
 import { Login } from "./Login.js";
 import { SideBar } from "./SideBar.js";
-import { DrawerNavigator } from "react-navigation";
+import { createDrawerNavigator, createAppContainer } from "react-navigation";
 
-export default Navigator = DrawerNavigator(
+const Nav = createDrawerNavigator(
   {
     Home: { screen: Home },
     Login: { screen: Login },
@@ -14,3 +14,5 @@ export default Navigator = DrawerNavigator(
     contentComponent: props => <SideBar {...props} />
   }
 );
+
+export const Navigator = createAppContainer(Nav)
