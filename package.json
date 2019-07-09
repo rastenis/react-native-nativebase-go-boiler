@@ -34,11 +34,13 @@
   "license": "ISC",
   "dependencies": {
     "expo": "^33.0.0",
+    "expo-font": "^5.0.1",
     "native-base": "^2.12.1",
     "react": "16.8.3",
     "react-dom": "^16.8.6",
     "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
-    "react-native-web": "^0.11.4"
+    "react-native-web": "^0.11.4",
+    "react-navigation": "^3.11.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^5.1.1"
