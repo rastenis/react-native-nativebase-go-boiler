@@ -2,7 +2,7 @@
   "name": "react-native-semantic-go-rethinkdb-oauth2-boiler",
   "version": "0.0.1",
   "description": "",
-  "main": "src/client/AppEntry.js",
+  "main": "client/src/AppEntry.js",
   "directories": {
     "test": "test"
   },
@@ -34,6 +34,7 @@
   "license": "ISC",
   "dependencies": {
     "expo": "^33.0.0",
+    "native-base": "^2.12.1",
     "react": "16.8.3",
     "react-dom": "^16.8.6",
     "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",

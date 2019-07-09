@@ -1,21 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Login from "./Login"
+import { Login } from "./Login"
+import { Container } from 'native-base';
 
 export default function Layout() {
   return (
-    <View style={styles.container}>
+    <Container>
       {/* <Text>base layout</Text> */}
       <Login></Login>
-    </View>
+    </Container>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

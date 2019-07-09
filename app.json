@@ -11,9 +11,9 @@
     ],
     "version": "0.0.1",
     "orientation": "portrait",
-    "icon": "./src/client/assets/icon.png",
+    "icon": "./client/src/assets/icon.png",
     "splash": {
-      "image": "./src/client/assets/splash.png",
+      "image": "./client/src/assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,7 +21,7 @@
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": [
-      "./src/client/**/*"
+      "./client/src/**/*"
     ],
     "ios": {
       "supportsTablet": true

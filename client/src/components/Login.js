@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Container, Header, Content, Label, Form, Item, Input, Button, Text } from 'native-base';
 
 export class Login extends Component {
   constructor(...args) {
@@ -20,17 +21,18 @@ export class Login extends Component {
 
   render() {
     return (
-      <View>
-        <h1>Login</h1>
-        <hr />
-        <form
-        >
-          <div>
-            <label htmlFor="emailField">
-              Email
-            </label>
-            <div >
-              <input
+      <Container>
+        <Header />
+        <Content>
+          <Form>
+            <Item>
+              <Label htmlFor="emailField">
+                Email
+            </Label>
+            </Item>
+
+            <Item>
+              <Input
                 id="emailField"
                 type="text"
                 placeholder="Email"
@@ -38,12 +40,14 @@ export class Login extends Component {
                 onChange={this.onChange}
                 value={this.state.email}
               />
-            </div>
-            <label htmlFor="passwordField">
-              Password
-            </label>
-            <div >
-              <input
+            </Item>
+            <Item>
+              <Label htmlFor="passwordField">
+                Password
+            </Label>
+            </Item>
+            <Item>
+              <Input
                 id="passwordField"
                 name="password"
                 type="password"
@@ -51,18 +55,20 @@ export class Login extends Component {
                 onChange={this.onChange}
                 value={this.state.password}
               />
-            </div>
-            <div >
-              <button
+            </Item>
+            <Item>
+              <Button
                 type="button"
                 onClick={this.submitLogin}
+                primary
+                style={{ width: "100%" }}
               >
-                Submit
-              </button>
-            </div>
-          </div>
-        </form>
-      </View >
+                <Text>Submit</Text>
+              </Button>
+            </Item>
+          </Form>
+        </Content>
+      </Container >
     );
   }
 }
