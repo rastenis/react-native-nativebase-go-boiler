@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Home } from "./Home.js";
-import { Login } from "./Login.js";
+import { ConnectedLogin } from "./Login.js";
 import { Register } from "./Register.js";
 import { SideBar } from "./SideBar.js";
 import { createDrawerNavigator, createAppContainer } from "react-navigation";
@@ -8,7 +8,7 @@ import { createDrawerNavigator, createAppContainer } from "react-navigation";
 const Nav = createDrawerNavigator(
   {
     Home: { screen: Home },
-    Login: { screen: Login },
+    Login: { screen: ConnectedLogin },
     Register: { screen: Register }
   },
   {

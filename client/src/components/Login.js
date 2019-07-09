@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Left, Right, Icon, Body, Title } from 'native-base';
+import * as mutations from "../store/mutations";
+import { connect } from "react-redux";
 
 export class Login extends Component {
   constructor(...args) {
@@ -11,12 +13,12 @@ export class Login extends Component {
     };
   }
 
-  onChange = e => {
-    this.setState({ [e.target.name]: e.target.value });
+  onChange = (name, text) => {
+    this.setState({ [name]: text });
   };
 
   submitLogin = () => {
-    // submit login
+    this.props.authenticateUser(this.state.email, this.state.password);
   };
 
   render() {
@@ -46,7 +48,7 @@ export class Login extends Component {
                 type="text"
                 placeholder="Email"
                 name="email"
-                onChange={this.onChange}
+                onChangeText={this.onChange.bind(this, "email")}
                 value={this.state.email}
               />
             </Item>
@@ -59,13 +61,13 @@ export class Login extends Component {
                 name="password"
                 type="password"
                 placeholder="Password"
-                onChange={this.onChange}
+                onChangeText={this.onChange.bind(this, "password")}
                 value={this.state.password}
               />
             </Item>
             <Button
               type="button"
-              onClick={this.submitLogin}
+              onPress={this.submitLogin}
               full rounded primary
               style={{ marginTop: 10 }}
             >
@@ -77,3 +79,20 @@ export class Login extends Component {
     );
   }
 }
+
+const authenticateUser = (e, p) => {
+  return mutations.requestAuth(e, p);
+};
+
+const mapStateToProps = ({ auth }) => ({
+  auth
+});
+
+const mapDispatchToProps = {
+  authenticateUser
+};
+
+export const ConnectedLogin = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Login);
