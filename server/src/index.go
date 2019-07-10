@@ -89,8 +89,8 @@ func main() {
 		res.Write(js)
 	})
 
-	router.HandleFunc("/api/users", func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("Retreiving users...")
+	router.HandleFunc("/api/people", func(res http.ResponseWriter, req *http.Request) {
+		fmt.Println("Retreiving people...")
 
 		// send back the session data
 		session, _ := store.Get(req, "boiler-session")

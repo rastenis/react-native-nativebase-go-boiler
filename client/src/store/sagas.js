@@ -20,13 +20,15 @@ export function* authenticationSaga() {
         password
       });
 
-      yield put(mutations.setState(data.state));
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
-      // requesting users
+      // requesting people
       yield put({
-        type: mutations.REQUEST_USERS
+        type: mutations.REQUEST_PEOPLE
       });
+
+      // request profile, etc.
+
       yield put(NavigationActions.navigate({ routeName: "Home" }))
     } catch (e) {
       Alert.alert("Error", e.response.data.Msg)
@@ -43,7 +45,6 @@ export function* registrationSaga() {
         email,
         password
       });
-      yield put(mutations.setState(data.state));
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
       yield put(NavigationActions.navigate({ routeName: "Home" }))
@@ -59,7 +60,7 @@ export function* sessionFetchSaga() {
     yield take(mutations.REQUEST_SESSION_FETCH);
     try {
       const { data } = yield axios.get(`${url}/api/session`);
-      yield put(mutations.setState(data.state));
+      yield put(mutations.setData(data.state));
       yield put(
         mutations.processAuth(data.auth ? mutations.AUTHENTICATED : null)
       );
@@ -71,14 +72,14 @@ export function* sessionFetchSaga() {
   }
 }
 
-export function* usersFetchSaga() {
+export function* peopleFetchSaga() {
   while (true) {
-    yield take(mutations.REQUEST_USERS);
+    yield take(mutations.REQUEST_PEOPLE);
     try {
-      const { data } = yield axios.get(`${url}/api/users`);
-      yield put(mutations.set(data.setData({ users: data.users })));
+      const { data } = yield axios.get(`${url}/api/people`);
+      yield put(mutations.setData({ people: data.people }));
     } catch (e) {
-      Alert.alert("Error", "Couldn't fetch users!")
+      Alert.alert("Error", "Couldn't fetch people!")
     }
   }
 }
