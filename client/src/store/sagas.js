@@ -2,6 +2,7 @@ import { take, put } from "redux-saga/effects";
 import axios from "axios";
 import * as mutations from "./mutations";
 import { NavigationActions } from 'react-navigation';
+import { Alert } from 'react-native'
 
 const url = `http://10.0.2.2:8080`;
 
@@ -21,13 +22,12 @@ export function* authenticationSaga() {
 
       yield put(mutations.setState(data.state));
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
-
       yield put({
         type: mutations.REQUEST_SESSION_FETCH
       });
       yield put(NavigationActions.navigate({ routeName: "Home" }))
     } catch (e) {
-      console.log(e);
+      Alert.alert("Error", e.response.data.Msg)
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -46,7 +46,7 @@ export function* registrationSaga() {
 
       yield put(NavigationActions.navigate({ routeName: "Home" }))
     } catch (e) {
-      // TODO: set error message
+      Alert.alert("Error", e.response.data.Msg)
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -64,7 +64,7 @@ export function* sessionFetchSaga() {
 
       yield put(NavigationActions.navigate({ routeName: "Home" }))
     } catch (e) {
-      // no conncetion to backend
+      Alert.alert("Error", "Couldn't reach server!")
     }
   }
 }
@@ -77,6 +77,6 @@ export function* logoutSaga() {
       yield put(mutations.clearState());
       yield put(mutations.processAuth(null));
       yield put(NavigationActions.navigate({ routeName: "Home" }))
-    } catch (e) { }
+    } catch (e) { Alert.alert("Error", "Couldn't log out!") }
   }
 }

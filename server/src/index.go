@@ -136,6 +136,7 @@ func main() {
 			log.Println(decodeError)
 			log.Println("Login failed. No user.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
+			res.WriteHeader(http.StatusUnauthorized)
 			res.Write(response)
 			return
 		}
@@ -145,6 +146,7 @@ func main() {
 		if comparisonError == nil {
 			log.Println("Login failed. Wrong password.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
+			res.WriteHeader(http.StatusUnauthorized)
 			res.Write(response)
 			return
 		}
@@ -187,6 +189,7 @@ func main() {
 		if decodeError == nil {
 			log.Println("Registration failed. Duplicate user.")
 			response, _ := json.Marshal(Response{false, "An user with that email already exists!"})
+			res.WriteHeader(http.StatusBadRequest)
 			res.Write(response)
 			return
 		}
