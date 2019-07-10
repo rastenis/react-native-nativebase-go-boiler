@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Left, Right, Icon, Body, Title } from 'native-base';
 import { connect } from 'react-redux'
 import * as mutations from "../store/mutations";
+import { Alert } from "react-native";
 
 class Registration extends Component {
   constructor(...args) {
@@ -10,7 +11,8 @@ class Registration extends Component {
     this.state = {
       email: "",
       password: "",
-      passwordConf: ""
+      passwordConf: "",
+      errors: []
     };
   }
 
@@ -19,6 +21,36 @@ class Registration extends Component {
   };
 
   submitRegistration = () => {
+    // clearing previous errors
+    this.state.errors = [];
+
+    // validation
+    if (!/\S+@\S+\.\S+/.test(this.state.email)) {
+      this.setState(prevState => ({
+        errors: [...prevState.errors, "email"]
+      }))
+      Alert.alert("Error", "Invalid email address!");
+      return;
+    }
+
+    // invalid password length
+    if (this.state.password.length < 5 || this.state.password.length > 100) {
+      this.setState(prevState => ({
+        errors: [...prevState.errors, "password"]
+      }))
+      Alert.alert("Error", "Password must be between 5 and a 100 characters!");
+      return;
+    }
+
+    // non-matching passwords
+    if (this.state.password != this.state.passwordConf) {
+      this.setState(prevState => ({
+        errors: [...prevState.errors, "password"]
+      }))
+      Alert.alert("Error", "Passwords do not match!");
+      return;
+    }
+
     this.props.requestRegistration(this.state.email, this.state.password);
   };
 
@@ -44,7 +76,7 @@ class Registration extends Component {
               Email
             </Label>
 
-            <Item>
+            <Item error={this.state.errors.includes("email")}>
               <Input
                 id="emailField"
                 type="text"
@@ -57,7 +89,7 @@ class Registration extends Component {
             <Label htmlFor="passwordField">
               Password
             </Label>
-            <Item>
+            <Item error={this.state.errors.includes("password")}>
               <Input
                 id="passwordField"
                 name="password"
@@ -70,7 +102,7 @@ class Registration extends Component {
             <Label htmlFor="passwordField">
               Confirm password
             </Label>
-            <Item>
+            <Item error={this.state.errors.includes("password")}>
               <Input
                 id="passwordConfField"
                 name="passwordConf"

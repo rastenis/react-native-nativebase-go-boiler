@@ -3,7 +3,7 @@ import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Lef
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
 
-export class Login extends Component {
+class Login extends Component {
   constructor(...args) {
     super(...args);
 
