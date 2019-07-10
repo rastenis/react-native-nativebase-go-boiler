@@ -55,11 +55,11 @@ export class Login extends Component {
             <Label htmlFor="passwordField">
               Password
             </Label>
-            <Item>
+            <Item last>
               <Input
                 id="passwordField"
                 name="password"
-                type="password"
+                secureTextEntry={true}
                 placeholder="Password"
                 onChangeText={this.onChange.bind(this, "password")}
                 value={this.state.password}

@@ -15,7 +15,7 @@ export function* authenticationSaga() {
   while (true) {
     const { email, password } = yield take(mutations.REQUEST_AUTH);
     try {
-      const { data } = yield axios.post(`${url}/api/auth`, {
+      yield axios.post(`${url}/api/auth`, {
         email,
         password
       });
@@ -41,7 +41,7 @@ export function* registrationSaga() {
   while (true) {
     const { email, password } = yield take(mutations.REQUEST_ACCOUNT_CREATION);
     try {
-      const { data } = yield axios.post(`${url}/api/register`, {
+      yield axios.post(`${url}/api/register`, {
         email,
         password
       });
@@ -60,9 +60,8 @@ export function* sessionFetchSaga() {
     yield take(mutations.REQUEST_SESSION_FETCH);
     try {
       const { data } = yield axios.get(`${url}/api/session`);
-      yield put(mutations.setData(data.state));
       yield put(
-        mutations.processAuth(data.auth ? mutations.AUTHENTICATED : null)
+        mutations.processAuth(data.Auth ? mutations.AUTHENTICATED : null)
       );
 
       yield put(NavigationActions.navigate({ routeName: "Home" }))
@@ -77,7 +76,7 @@ export function* peopleFetchSaga() {
     yield take(mutations.REQUEST_PEOPLE);
     try {
       const { data } = yield axios.get(`${url}/api/people`);
-      yield put(mutations.setData({ people: data.people }));
+      yield put(mutations.setData({ people: data.People }));
     } catch (e) {
       Alert.alert("Error", "Couldn't fetch people!")
     }
