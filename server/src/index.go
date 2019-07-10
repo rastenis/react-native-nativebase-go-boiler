@@ -67,7 +67,7 @@ func main() {
 		fmt.Fprint(res, "This is the index page.")
 	})
 
-	router.HandleFunc("/session", func(res http.ResponseWriter, req *http.Request) {
+	router.HandleFunc("/api/session", func(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Retreiving session...")
 
 		// send back the session data
@@ -89,7 +89,7 @@ func main() {
 		res.Write(js)
 	})
 
-	router.HandleFunc("/user", func(res http.ResponseWriter, req *http.Request) {
+	router.HandleFunc("/api/users", func(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Retreiving users...")
 
 		// send back the session data

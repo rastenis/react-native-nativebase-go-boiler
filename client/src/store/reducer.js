@@ -10,9 +10,9 @@ export const reducer = combineReducers({
   data(d = defaultState.data, action) {
     let { type, data } = action;
     switch (type) {
-      case mutations.SET_STATE:
+      case mutations.SET_DATA:
         return { ...d, ...data };
-      case mutations.CLEAR_STATE:
+      case mutations.CLEAR_DATA:
         return {};
       default:
         return d;

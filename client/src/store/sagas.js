@@ -22,8 +22,10 @@ export function* authenticationSaga() {
 
       yield put(mutations.setState(data.state));
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
+
+      // requesting users
       yield put({
-        type: mutations.REQUEST_SESSION_FETCH
+        type: mutations.REQUEST_USERS
       });
       yield put(NavigationActions.navigate({ routeName: "Home" }))
     } catch (e) {
@@ -56,7 +58,7 @@ export function* sessionFetchSaga() {
   while (true) {
     yield take(mutations.REQUEST_SESSION_FETCH);
     try {
-      const { data } = yield axios.get(`${url}/api/data`);
+      const { data } = yield axios.get(`${url}/api/session`);
       yield put(mutations.setState(data.state));
       yield put(
         mutations.processAuth(data.auth ? mutations.AUTHENTICATED : null)
@@ -65,6 +67,18 @@ export function* sessionFetchSaga() {
       yield put(NavigationActions.navigate({ routeName: "Home" }))
     } catch (e) {
       Alert.alert("Error", "Couldn't reach server!")
+    }
+  }
+}
+
+export function* usersFetchSaga() {
+  while (true) {
+    yield take(mutations.REQUEST_USERS);
+    try {
+      const { data } = yield axios.get(`${url}/api/users`);
+      yield put(mutations.set(data.setData({ users: data.users })));
+    } catch (e) {
+      Alert.alert("Error", "Couldn't fetch users!")
     }
   }
 }

@@ -3,11 +3,12 @@ export const PROCESSING_AUTH = `PROCESSING_AUTH`;
 export const AUTHENTICATING = `AUTHENTICATING`;
 export const AUTHENTICATED = `AUTHENTICATED`;
 export const AUTH_ERROR = `AUTH_ERROR`;
-export const SET_STATE = `SET_STATE`;
-export const CLEAR_STATE = `CLEAR_STATE`;
+export const SET_DATA = `SET_DATA`;
+export const CLEAR_DATA = `CLEAR_DATA`;
 export const REQUEST_ACCOUNT_CREATION = `REQUEST_ACCOUNT_CREATION`;
 export const REQUEST_SESSION_FETCH = `REQUEST_SESSION_FETCH`;
 export const REQUEST_LOGOUT = `REQUEST_LOGOUT`;
+export const REQUEST_USERS = `REQUEST_USERS`;
 export const WAITING = `WAITING`;
 export const REQUEST_AUTH_UNLINK = `REQUEST_AUTH_UNLINK`;
 export const REQUEST_PASSWORD_CHANGE = `REQUEST_PASSWORD_CHANGE`;
@@ -27,13 +28,13 @@ export const requestLogout = () => ({
   type: REQUEST_LOGOUT
 });
 
-export const setState = (state = {}) => ({
-  type: SET_STATE,
+export const setData = (state = {}) => ({
+  type: SET_DATA,
   data: state
 });
 
-export const clearState = () => ({
-  type: CLEAR_STATE
+export const clearData = () => ({
+  type: CLEAR_DATA
 });
 
 export const requestAccountCreation = (email, password) => ({
