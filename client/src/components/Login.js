@@ -71,7 +71,7 @@ export class Login extends Component {
               full rounded primary
               style={{ marginTop: 10 }}
             >
-              <Text>Submit</Text>
+              <Text>Log in</Text>
             </Button>
           </Form>
         </Content>
@@ -84,15 +84,11 @@ const authenticateUser = (e, p) => {
   return mutations.requestAuth(e, p);
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth
-});
-
 const mapDispatchToProps = {
   authenticateUser
 };
 
 export const ConnectedLogin = connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps
 )(Login);

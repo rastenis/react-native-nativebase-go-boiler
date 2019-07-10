@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Left, Right, Icon, Body, Title } from 'native-base';
+import { connect } from 'react-redux'
+import * as mutations from "../store/mutations";
 
-export class Register extends Component {
+class Registration extends Component {
   constructor(...args) {
     super(...args);
 
@@ -12,11 +14,12 @@ export class Register extends Component {
     };
   }
 
-  onChange = e => {
-    this.setState({ [e.target.name]: e.target.value });
+  onChange = (name, text) => {
+    this.setState({ [name]: text });
   };
 
   submitRegistration = () => {
+    this.props.requestRegistration(this.state.email, this.state.password);
   };
 
   render() {
@@ -47,7 +50,7 @@ export class Register extends Component {
                 type="text"
                 placeholder="Email"
                 name="email"
-                onChange={this.onChange}
+                onChangeText={this.onChange.bind(this, "email")}
                 value={this.state.email}
               />
             </Item>
@@ -58,9 +61,9 @@ export class Register extends Component {
               <Input
                 id="passwordField"
                 name="password"
-                type="password"
+                secureTextEntry={true}
                 placeholder="Password"
-                onChange={this.onChange}
+                onChangeText={this.onChange.bind(this, "password")}
                 value={this.state.password}
               />
             </Item>
@@ -71,19 +74,19 @@ export class Register extends Component {
               <Input
                 id="passwordConfField"
                 name="passwordConf"
-                type="password"
+                secureTextEntry={true}
                 placeholder="Confirm password"
-                onChange={this.onChange}
+                onChangeText={this.onChange.bind(this, "passwordConf")}
                 value={this.state.passwordConf}
               />
             </Item>
             <Button
               type="button"
-              onClick={this.submitLogin}
+              onPress={this.submitRegistration}
               full rounded info
               style={{ marginTop: 10 }}
             >
-              <Text>Submit</Text>
+              <Text>Register</Text>
             </Button>
           </Form>
         </Content>
@@ -91,3 +94,16 @@ export class Register extends Component {
     );
   }
 }
+
+const requestRegistration = (e, p) => {
+  return mutations.requestAccountCreation(e, p);
+};
+
+const mapDispatchToProps = {
+  requestRegistration
+};
+
+export const ConnectedRegistration = connect(
+  null,
+  mapDispatchToProps
+)(Registration);
