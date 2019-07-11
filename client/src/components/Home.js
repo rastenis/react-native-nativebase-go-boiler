@@ -1,7 +1,6 @@
 import React from "react";
-import { Container, Header, Title, Left, Icon, Right, Button, Body, Content, Text, Card, CardItem } from "native-base";
+import { Container, Header, Title, Right, Button, Body, Content, Text, Card, CardItem } from "native-base";
 import { connect } from 'react-redux'
-import * as mutations from '../store/mutations'
 
 class Home extends React.Component {
   render() {

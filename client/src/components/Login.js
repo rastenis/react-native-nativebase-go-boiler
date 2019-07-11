@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Left, Right, Icon, Body, Title } from 'native-base';
+import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Right, Body, Title } from 'native-base';
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
 
@@ -25,13 +25,7 @@ class Login extends Component {
     return (
       <Container>
         <Header>
-          <Left>
-            <Button
-              transparent
-              onPress={() => this.props.navigation.openDrawer()}>
-              <Icon name="menu" />
-            </Button>
-          </Left>
+
           <Body>
             <Title>Login</Title>
           </Body>

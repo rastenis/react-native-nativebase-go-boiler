@@ -1,6 +1,6 @@
 import React from "react";
 import { Container, Content, Text, List, ListItem } from "native-base";
-const routes = ["Home", "Profile"];
+const routes = ["Main", "Profile"];
 export class SideBar extends React.Component {
 
   render() {

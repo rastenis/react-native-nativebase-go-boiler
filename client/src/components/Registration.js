@@ -61,8 +61,8 @@ class Registration extends Component {
           <Left>
             <Button
               transparent
-              onPress={() => this.props.navigation.openDrawer()}>
-              <Icon name="menu" />
+              onPress={() => this.props.navigation.navigate("Login")}>
+              <Icon name="md-arrow-back" />
             </Button>
           </Left>
           <Body>
@@ -75,7 +75,6 @@ class Registration extends Component {
             <Label htmlFor="emailField">
               Email
             </Label>
-
             <Item error={this.state.errors.includes("email")}>
               <Input
                 id="emailField"
