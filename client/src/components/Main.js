@@ -4,6 +4,12 @@ import { connect } from 'react-redux'
 import * as mutations from '../store/mutations'
 
 class Main extends React.Component {
+  componentWillMount() {
+    if (this.props.auth !== mutations.AUTHENTICATED) {
+      this.props.navigation.navigate("Home")
+    }
+  }
+
   render() {
     return (
       <Container>
@@ -23,7 +29,7 @@ class Main extends React.Component {
         <Content padder>
           <Text style={{ textAlign: "center" }}>People list:</Text>
           <Card>
-            {this.props.auth == mutations.AUTHENTICATED && this.props.people ? this.props.people.map((person, index) => {
+            {this.props.people ? this.props.people.map((person, index) => {
               return (<CardItem key={index}>
                 <Body>
                   <Text>{person.Name}</Text>
@@ -31,8 +37,8 @@ class Main extends React.Component {
               </CardItem>)
             }) : <CardItem>
                 <Body>
-                  <Text>You are not authenticated.</Text>
-                </Body> {/* TODO: auto redirect to Home */}
+                  <Text>No people to list.</Text>
+                </Body>
               </CardItem>}
           </Card>
         </Content>

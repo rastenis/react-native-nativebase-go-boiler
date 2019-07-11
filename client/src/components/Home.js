@@ -3,6 +3,12 @@ import { Container, Header, Title, Right, Button, Body, Content, Text, Card, Car
 import { connect } from 'react-redux'
 
 class Home extends React.Component {
+  componentWillMount() {
+    if (this.props.auth === mutations.AUTHENTICATED) {
+      this.props.navigation.navigate("Main")
+    }
+  }
+
   render() {
     return (
       <Container>
@@ -31,8 +37,7 @@ class Home extends React.Component {
   }
 }
 
-const mapStateToProps = ({ data, auth }) => ({
-  people: data.people,
+const mapStateToProps = ({ auth }) => ({
   auth
 });
 

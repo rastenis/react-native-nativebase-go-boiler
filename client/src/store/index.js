@@ -14,4 +14,6 @@ for (let saga in sagas) {
   sagaMiddleware.run(sagas[saga]);
 }
 
+// TODO: async fetch session data when starting up.
+
 export default store;
