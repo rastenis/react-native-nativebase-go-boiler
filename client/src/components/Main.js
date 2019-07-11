@@ -31,9 +31,9 @@ class Main extends React.Component {
           <Card>
             {this.props.people ? this.props.people.map((person, index) => {
               return (<CardItem key={index}>
-                <Body>
+                <Text>
                   <Text>{person.Name}</Text>
-                </Body>
+                </Text>
               </CardItem>)
             }) : <CardItem>
                 <Body>

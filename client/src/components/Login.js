@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Right, Body, Title } from 'native-base';
+import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Right, Body, Title, Icon } from 'native-base';
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
 
@@ -74,6 +74,24 @@ class Login extends Component {
               style={{ marginTop: 10 }}
             >
               <Text>Don't have an account?</Text>
+            </Button>
+            <Button
+              type="button"
+              onPress={() => {/* open popup*/ }}
+              full rounded light
+              style={{ marginTop: 10 }}
+            >
+              <Icon name="logo-google" />
+              <Text>Sign in with Google</Text>
+            </Button>
+            <Button
+              type="button"
+              onPress={() => {/* open popup*/ }}
+              full rounded light
+              style={{ color: "blue", marginTop: 10 }}
+            >
+              <Icon name="logo-twitter" />
+              <Text>Sign in with Twitter</Text>
             </Button>
           </Form>
         </Content>
