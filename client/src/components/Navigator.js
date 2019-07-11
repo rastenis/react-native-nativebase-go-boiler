@@ -9,7 +9,7 @@ const Nav = createDrawerNavigator(
   {
     Home: { screen: ConnectedHome },
     Login: { screen: ConnectedLogin },
-    Register: { screen: ConnectedRegistration }
+    Registration: { screen: ConnectedRegistration }
   },
   {
     contentComponent: props => <SideBar {...props} />

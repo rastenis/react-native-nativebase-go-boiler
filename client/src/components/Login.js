@@ -68,10 +68,18 @@ class Login extends Component {
             <Button
               type="button"
               onPress={this.submitLogin}
-              full rounded primary
+              full rounded success
               style={{ marginTop: 10 }}
             >
               <Text>Log in</Text>
+            </Button>
+            <Button
+              type="button"
+              onPress={() => this.props.navigation.navigate("Registration")}
+              full rounded primary
+              style={{ marginTop: 10 }}
+            >
+              <Text>Don't have an account?</Text>
             </Button>
           </Form>
         </Content>
