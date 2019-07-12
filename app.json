@@ -4,25 +4,19 @@
     "slug": "boiler",
     "privacy": "public",
     "sdkVersion": "33.0.0",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "version": "0.0.1",
     "orientation": "portrait",
-    "icon": "./client/src/assets/icon.png",
+    "icon": "./app/src/assets/icon.png",
     "splash": {
-      "image": "./client/src/assets/splash.png",
+      "image": "./app/src/assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "./client/src/**/*"
-    ],
+    "assetBundlePatterns": ["./app/src/**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.yourappname"

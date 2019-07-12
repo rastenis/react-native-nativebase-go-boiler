@@ -1,8 +1,8 @@
 import { take, put } from "redux-saga/effects";
 import axios from "axios";
 import * as mutations from "./mutations";
-import { NavigationActions } from 'react-navigation';
-import { Alert } from 'react-native'
+import { NavigationActions } from "react-navigation";
+import { Alert } from "react-native";
 
 const url = `http://10.0.2.2:8080`;
 
@@ -29,9 +29,9 @@ export function* authenticationSaga() {
 
       // request profile, etc.
 
-      yield put(NavigationActions.navigate({ routeName: "Home" }))
+      yield put(NavigationActions.navigate({ routeName: "Home" }));
     } catch (e) {
-      Alert.alert("Error", e.response.data.Msg)
+      Alert.alert("Error", e.response.data.Msg);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -47,9 +47,9 @@ export function* registrationSaga() {
       });
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
-      yield put(NavigationActions.navigate({ routeName: "Home" }))
+      yield put(NavigationActions.navigate({ routeName: "Home" }));
     } catch (e) {
-      Alert.alert("Error", e.response.data.Msg)
+      Alert.alert("Error", e.response.data.Msg);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -64,9 +64,9 @@ export function* sessionFetchSaga() {
         mutations.processAuth(data.Auth ? mutations.AUTHENTICATED : null)
       );
 
-      yield put(NavigationActions.navigate({ routeName: "Home" }))
+      yield put(NavigationActions.navigate({ routeName: "Home" }));
     } catch (e) {
-      Alert.alert("Error", "Couldn't reach server!")
+      Alert.alert("Error", "Couldn't reach server!");
     }
   }
 }
@@ -78,7 +78,7 @@ export function* peopleFetchSaga() {
       const { data } = yield axios.get(`${url}/api/people`);
       yield put(mutations.setData({ people: data.People }));
     } catch (e) {
-      Alert.alert("Error", "Couldn't fetch people!")
+      Alert.alert("Error", "Couldn't fetch people!");
     }
   }
 }
@@ -90,7 +90,9 @@ export function* logoutSaga() {
       yield axios.post(`${url}/api/logout`);
       yield put(mutations.clearState());
       yield put(mutations.processAuth(null));
-      yield put(NavigationActions.navigate({ routeName: "Home" }))
-    } catch (e) { Alert.alert("Error", "Couldn't log out!") }
+      yield put(NavigationActions.navigate({ routeName: "Home" }));
+    } catch (e) {
+      Alert.alert("Error", "Couldn't log out!");
+    }
   }
 }

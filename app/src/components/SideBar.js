@@ -2,7 +2,6 @@ import React from "react";
 import { Container, Content, Text, List, ListItem } from "native-base";
 const routes = ["Main", "Profile"];
 export class SideBar extends React.Component {
-
   render() {
     return (
       <Container>
@@ -13,7 +12,8 @@ export class SideBar extends React.Component {
               return (
                 <ListItem
                   button
-                  onPress={() => this.props.navigation.navigate(data)}>
+                  onPress={() => this.props.navigation.navigate(data)}
+                >
                   <Text>{data}</Text>
                 </ListItem>
               );

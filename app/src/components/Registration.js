@@ -1,6 +1,21 @@
 import React, { Component } from "react";
-import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Left, Right, Icon, Body, Title } from 'native-base';
-import { connect } from 'react-redux'
+import {
+  Container,
+  Header,
+  Content,
+  Label,
+  Form,
+  Item,
+  Input,
+  Button,
+  Text,
+  Left,
+  Right,
+  Icon,
+  Body,
+  Title
+} from "native-base";
+import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
 import { Alert } from "react-native";
 
@@ -28,7 +43,7 @@ class Registration extends Component {
     if (!/\S+@\S+\.\S+/.test(this.state.email)) {
       this.setState(prevState => ({
         errors: [...prevState.errors, "email"]
-      }))
+      }));
       Alert.alert("Error", "Invalid email address!");
       return;
     }
@@ -37,7 +52,7 @@ class Registration extends Component {
     if (this.state.password.length < 5 || this.state.password.length > 100) {
       this.setState(prevState => ({
         errors: [...prevState.errors, "password"]
-      }))
+      }));
       Alert.alert("Error", "Password must be between 5 and a 100 characters!");
       return;
     }
@@ -46,7 +61,7 @@ class Registration extends Component {
     if (this.state.password != this.state.passwordConf) {
       this.setState(prevState => ({
         errors: [...prevState.errors, "password"]
-      }))
+      }));
       Alert.alert("Error", "Passwords do not match!");
       return;
     }
@@ -61,7 +76,8 @@ class Registration extends Component {
           <Left>
             <Button
               transparent
-              onPress={() => this.props.navigation.navigate("Login")}>
+              onPress={() => this.props.navigation.navigate("Login")}
+            >
               <Icon name="md-arrow-back" />
             </Button>
           </Left>
@@ -72,9 +88,7 @@ class Registration extends Component {
         </Header>
         <Content padder>
           <Form>
-            <Label htmlFor="emailField">
-              Email
-            </Label>
+            <Label htmlFor="emailField">Email</Label>
             <Item error={this.state.errors.includes("email")}>
               <Input
                 id="emailField"
@@ -85,9 +99,7 @@ class Registration extends Component {
                 value={this.state.email}
               />
             </Item>
-            <Label htmlFor="passwordField">
-              Password
-            </Label>
+            <Label htmlFor="passwordField">Password</Label>
             <Item error={this.state.errors.includes("password")}>
               <Input
                 id="passwordField"
@@ -98,9 +110,7 @@ class Registration extends Component {
                 value={this.state.password}
               />
             </Item>
-            <Label htmlFor="passwordField">
-              Confirm password
-            </Label>
+            <Label htmlFor="passwordField">Confirm password</Label>
             <Item error={this.state.errors.includes("password")}>
               <Input
                 id="passwordConfField"
@@ -114,14 +124,16 @@ class Registration extends Component {
             <Button
               type="button"
               onPress={this.submitRegistration}
-              full rounded info
+              full
+              rounded
+              info
               style={{ marginTop: 10 }}
             >
               <Text>Register</Text>
             </Button>
           </Form>
         </Content>
-      </Container >
+      </Container>
     );
   }
 }

@@ -28,5 +28,5 @@ export const reducer = combineReducers({
       default:
         return userAuth;
     }
-  },
+  }
 });

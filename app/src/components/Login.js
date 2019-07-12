@@ -1,5 +1,19 @@
 import React, { Component } from "react";
-import { Container, Header, Content, Label, Form, Item, Input, Button, Text, Right, Body, Title, Icon } from 'native-base';
+import {
+  Container,
+  Header,
+  Content,
+  Label,
+  Form,
+  Item,
+  Input,
+  Button,
+  Text,
+  Right,
+  Body,
+  Title,
+  Icon
+} from "native-base";
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
 
@@ -25,7 +39,6 @@ class Login extends Component {
     return (
       <Container>
         <Header>
-
           <Body>
             <Title>Login</Title>
           </Body>
@@ -33,9 +46,7 @@ class Login extends Component {
         </Header>
         <Content padder>
           <Form>
-            <Label htmlFor="emailField">
-              Email
-            </Label>
+            <Label htmlFor="emailField">Email</Label>
             <Item>
               <Input
                 id="emailField"
@@ -46,9 +57,7 @@ class Login extends Component {
                 value={this.state.email}
               />
             </Item>
-            <Label htmlFor="passwordField">
-              Password
-            </Label>
+            <Label htmlFor="passwordField">Password</Label>
             <Item last>
               <Input
                 id="passwordField"
@@ -62,7 +71,9 @@ class Login extends Component {
             <Button
               type="button"
               onPress={this.submitLogin}
-              full rounded success
+              full
+              rounded
+              success
               style={{ marginTop: 10 }}
             >
               <Text>Log in</Text>
@@ -70,15 +81,21 @@ class Login extends Component {
             <Button
               type="button"
               onPress={() => this.props.navigation.navigate("Registration")}
-              full rounded primary
+              full
+              rounded
+              primary
               style={{ marginTop: 10 }}
             >
               <Text>Don't have an account?</Text>
             </Button>
             <Button
               type="button"
-              onPress={() => {/* open popup*/ }}
-              full rounded light
+              onPress={() => {
+                /* open popup*/
+              }}
+              full
+              rounded
+              light
               style={{ marginTop: 10 }}
             >
               <Icon name="logo-google" />
@@ -86,8 +103,12 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={() => {/* open popup*/ }}
-              full rounded light
+              onPress={() => {
+                /* open popup*/
+              }}
+              full
+              rounded
+              light
               style={{ color: "blue", marginTop: 10 }}
             >
               <Icon name="logo-twitter" />
@@ -95,7 +116,7 @@ class Login extends Component {
             </Button>
           </Form>
         </Content>
-      </Container >
+      </Container>
     );
   }
 }

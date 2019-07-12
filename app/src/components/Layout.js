@@ -1,10 +1,10 @@
-import { Navigator } from "./Navigator"
-import { Container } from 'native-base';
+import { Navigator } from "./Navigator";
+import { Container } from "native-base";
 import React, { Component } from "react";
 import { AppLoading } from "expo";
-import * as Font from "expo-font"
-import { Provider } from 'react-redux'
-import store from "../store"
+import * as Font from "expo-font";
+import { Provider } from "react-redux";
+import store from "../store";
 
 export class Layout extends Component {
   constructor(props) {

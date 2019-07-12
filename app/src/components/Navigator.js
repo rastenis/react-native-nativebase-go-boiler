@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { ConnectedHome } from "./Home.js";
 import { ConnectedLogin } from "./Login.js";
 import { ConnectedRegistration } from "./Registration.js";
-import { ConnectedMain } from './Main.js'
+import { ConnectedMain } from "./Main.js";
 import { SideBar } from "./SideBar.js";
 import { createDrawerNavigator, createAppContainer } from "react-navigation";
 
@@ -18,4 +18,4 @@ const Nav = createDrawerNavigator(
   }
 );
 
-export const Navigator = createAppContainer(Nav)
+export const Navigator = createAppContainer(Nav);
