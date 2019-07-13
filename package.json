@@ -2,7 +2,7 @@
   "name": "react-native-semantic-go-rethinkdb-oauth2-boiler",
   "version": "0.0.1",
   "description": "",
-  "main": "client/src/AppEntry.js",
+  "main": "app/src/AppEntry.js",
   "directories": {
     "test": "test"
   },

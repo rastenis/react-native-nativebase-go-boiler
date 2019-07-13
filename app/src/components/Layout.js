@@ -5,6 +5,7 @@ import { AppLoading } from "expo";
 import * as Font from "expo-font";
 import { Provider } from "react-redux";
 import store from "../store";
+import NavigationService from "./NavigationService";
 
 export class Layout extends Component {
   constructor(props) {
@@ -30,7 +31,11 @@ export class Layout extends Component {
     }
     return (
       <Provider store={store}>
-        <Navigator />
+        <Navigator
+          ref={navigatorRef => {
+            NavigationService.setTopLevelNavigator(navigatorRef);
+          }}
+        />
       </Provider>
     );
   }
