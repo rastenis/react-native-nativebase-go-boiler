@@ -13,6 +13,7 @@ import {
   Card,
   CardItem
 } from "native-base";
+import { ActivityIndicator } from "react-native";
 import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
 
@@ -43,7 +44,9 @@ class Main extends React.Component {
         <Content padder>
           <Text style={{ textAlign: "center" }}>People list:</Text>
           <Card>
-            {this.props.people ? (
+            {this.props.people == mutations.WAITING ? (
+              <ActivityIndicator />
+            ) : this.props.people ? (
               this.props.people.map((person, index) => {
                 return (
                   <CardItem key={index}>

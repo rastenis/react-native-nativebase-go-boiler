@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
@@ -43,20 +43,19 @@ type user struct {
 	Password string
 }
 
-var store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
-	securecookie.GenerateRandomKey(16))
-
-func init() {
-	store.Options = &sessions.Options{
-		MaxAge:   3600 * 8, // 8 hours
-		HttpOnly: true,
-	}
-}
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET1")),
+[]byte(os.Getenv("SESSION_SECRET2")))
+
+	store.Options = &sessions.Options{
+		MaxAge:   3600 * 8, // 8 hours
+		HttpOnly: true,
 	}
 
 	// setting up database

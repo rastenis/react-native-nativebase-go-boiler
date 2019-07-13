@@ -15,7 +15,7 @@ import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
 
 class Home extends React.Component {
-  componentWillMount() {
+  componentDidUpdate() {
     if (this.props.auth === mutations.AUTHENTICATED) {
       this.props.navigation.navigate("Main");
     }
