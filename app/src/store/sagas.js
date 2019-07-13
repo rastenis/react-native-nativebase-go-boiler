@@ -3,6 +3,7 @@ import axios from "axios";
 import * as mutations from "./mutations";
 import { Alert } from "react-native";
 import NavigationService from "../components/NavigationService";
+import { fetchSession, storeSession } from "./localStorage";
 
 const url = `http://10.0.2.2:8080`;
 
@@ -15,11 +16,15 @@ export function* authenticationSaga() {
   while (true) {
     const { email, password } = yield take(mutations.REQUEST_AUTH);
     try {
-      yield axios.post(`${url}/api/auth`, {
+      const { headers } = yield axios.post(`${url}/api/auth`, {
         email,
         password
       });
 
+      // storing session locally.
+      yield storeSession(headers["set-cookie"][0]);
+
+      console.log(true);
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
       // requesting people
@@ -48,6 +53,7 @@ export function* registrationSaga() {
 
       NavigationService.navigate("Main");
     } catch (e) {
+      console.error(e);
       Alert.alert("Error", e.response.data.Msg);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
@@ -58,11 +64,28 @@ export function* sessionFetchSaga() {
   while (true) {
     yield take(mutations.REQUEST_SESSION_FETCH);
     try {
+      // attempt to fetch local session token
+      const storedSession = yield fetchSession();
+
+      if (storedSession) {
+        // set cookie
+        axios.defaults.headers["set-cookie"] = storedSession;
+      }
+
       const { data } = yield axios.get(`${url}/api/session`);
+
       yield put(
         mutations.processAuth(data.Auth ? mutations.AUTHENTICATED : null)
       );
+
+      if (data.Auth) {
+        yield put({
+          type: mutations.REQUEST_PEOPLE
+        });
+        NavigationService.navigate("Main");
+      }
     } catch (e) {
+      console.error(e);
       Alert.alert("Error", "Couldn't reach server!");
     }
   }
@@ -75,6 +98,7 @@ export function* peopleFetchSaga() {
       const { data } = yield axios.get(`${url}/api/people`);
       yield put(mutations.setData({ people: data.People }));
     } catch (e) {
+      console.error(e);
       Alert.alert("Error", "Couldn't fetch people!");
     }
   }

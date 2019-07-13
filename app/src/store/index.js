@@ -2,6 +2,7 @@ import { createStore, applyMiddleware } from "redux";
 import { reducer } from "./reducer";
 import createSagaMiddleware from "redux-saga";
 import * as sagas from "./sagas";
+import * as mutations from "./mutations";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -11,6 +12,6 @@ for (let saga in sagas) {
   sagaMiddleware.run(sagas[saga]);
 }
 
-// TODO: async fetch session data when starting up.
+store.dispatch({ type: mutations.REQUEST_SESSION_FETCH });
 
 export default store;
