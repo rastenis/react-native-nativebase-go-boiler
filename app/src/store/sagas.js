@@ -85,10 +85,11 @@ export function* logoutSaga() {
     yield take(mutations.REQUEST_LOGOUT);
     try {
       yield axios.post(`${url}/api/logout`);
-      yield put(mutations.clearState());
+      yield put(mutations.clearData());
       yield put(mutations.processAuth(null));
       NavigationService.navigate("Home");
     } catch (e) {
+      console.log(e);
       Alert.alert("Error", "Couldn't log out!");
     }
   }
