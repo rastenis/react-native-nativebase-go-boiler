@@ -1,7 +1,14 @@
 import React from "react";
-import { Container, Content, Text, List, ListItem } from "native-base";
+import { Container, Content, Text, List, ListItem, Button } from "native-base";
+import { connect } from "react-redux";
+import * as mutations from "../store/mutations";
+
 const routes = ["Main", "Profile"];
-export class SideBar extends React.Component {
+class SideBar extends React.Component {
+  requestLogout() {
+    this.props.logout();
+  }
+
   render() {
     return (
       <Container>
@@ -19,8 +26,24 @@ export class SideBar extends React.Component {
               );
             }}
           />
+          <Button danger full onPress={() => this.requestLogout()}>
+            <Text>Logout</Text>
+          </Button>
         </Content>
       </Container>
     );
   }
 }
+
+const logout = () => {
+  return mutations.requestLogout();
+};
+
+const mapDispatchToProps = {
+  logout
+};
+
+export const ConnectedSidebar = connect(
+  null,
+  mapDispatchToProps
+)(SideBar);

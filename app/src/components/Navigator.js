@@ -3,7 +3,7 @@ import { ConnectedHome } from "./Home.js";
 import { ConnectedLogin } from "./Login.js";
 import { ConnectedRegistration } from "./Registration.js";
 import { ConnectedMain } from "./Main.js";
-import { SideBar } from "./SideBar.js";
+import { ConnectedSidebar } from "./SideBar.js";
 import { createDrawerNavigator, createAppContainer } from "react-navigation";
 
 const Nav = createDrawerNavigator(
@@ -14,7 +14,7 @@ const Nav = createDrawerNavigator(
     Main: { screen: ConnectedMain }
   },
   {
-    contentComponent: props => <SideBar {...props} />
+    contentComponent: props => <ConnectedSidebar {...props} />
   }
 );
 
