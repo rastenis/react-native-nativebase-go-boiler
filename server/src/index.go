@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
@@ -43,20 +43,19 @@ type user struct {
 	Password string
 }
 
-var store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
-	securecookie.GenerateRandomKey(16))
-
-func init() {
-	store.Options = &sessions.Options{
-		MaxAge:   3600 * 8, // 8 hours
-		HttpOnly: true,
-	}
-}
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET1")),
+[]byte(os.Getenv("SESSION_SECRET2")))
+
+	store.Options = &sessions.Options{
+		MaxAge:   3600 * 8, // 8 hours
+		HttpOnly: true,
 	}
 
 	// setting up database
@@ -67,7 +66,7 @@ func main() {
 		fmt.Fprint(res, "This is the index page.")
 	})
 
-	router.HandleFunc("/session", func(res http.ResponseWriter, req *http.Request) {
+	router.HandleFunc("/api/session", func(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Retreiving session...")
 
 		// send back the session data
@@ -89,8 +88,8 @@ func main() {
 		res.Write(js)
 	})
 
-	router.HandleFunc("/user", func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("Retreiving users...")
+	router.HandleFunc("/api/people", func(res http.ResponseWriter, req *http.Request) {
+		fmt.Println("Retreiving people...")
 
 		// send back the session data
 		session, _ := store.Get(req, "boiler-session")
@@ -136,6 +135,7 @@ func main() {
 			log.Println(decodeError)
 			log.Println("Login failed. No user.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
+			res.WriteHeader(http.StatusUnauthorized)
 			res.Write(response)
 			return
 		}
@@ -145,6 +145,7 @@ func main() {
 		if comparisonError == nil {
 			log.Println("Login failed. Wrong password.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
+			res.WriteHeader(http.StatusUnauthorized)
 			res.Write(response)
 			return
 		}
@@ -187,6 +188,7 @@ func main() {
 		if decodeError == nil {
 			log.Println("Registration failed. Duplicate user.")
 			response, _ := json.Marshal(Response{false, "An user with that email already exists!"})
+			res.WriteHeader(http.StatusBadRequest)
 			res.Write(response)
 			return
 		}

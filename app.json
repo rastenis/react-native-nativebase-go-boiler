@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Boiler",
+    "slug": "boiler",
+    "privacy": "public",
+    "sdkVersion": "33.0.0",
+    "platforms": ["ios", "android", "web"],
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./app/src/assets/icon.png",
+    "splash": {
+      "image": "./app/src/assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["./app/src/**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.yourappname"
+    },
+    "androidStatusBarColor": "#334393",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#334393"
+    },
+    "android": {
+      "package": "com.yourcompany.yourappname"
+    }
+  }
+}
