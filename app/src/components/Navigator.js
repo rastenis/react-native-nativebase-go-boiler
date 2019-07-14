@@ -4,7 +4,12 @@ import { ConnectedLogin } from "./Login.js";
 import { ConnectedRegistration } from "./Registration.js";
 import { ConnectedMain } from "./Main.js";
 import { ConnectedSidebar } from "./SideBar.js";
-import { createDrawerNavigator, createAppContainer } from "react-navigation";
+import {
+  createDrawerNavigator,
+  createAppContainer,
+  createStackNavigator
+} from "react-navigation";
+import { ExternalLogin } from "./ExternalLogin";
 
 const Nav = createDrawerNavigator(
   {
@@ -14,8 +19,24 @@ const Nav = createDrawerNavigator(
     Main: { screen: ConnectedMain }
   },
   {
-    contentComponent: props => <ConnectedSidebar {...props} />
+    contentComponent: props => <ConnectedSidebar {...props} />,
+    initialRouteName: "Home"
   }
 );
 
-export const Navigator = createAppContainer(Nav);
+const RootStack = createStackNavigator(
+  {
+    Main: {
+      screen: Nav
+    },
+    ExternalLogin: {
+      screen: ExternalLogin
+    }
+  },
+  {
+    mode: "modal",
+    headerMode: "none"
+  }
+);
+
+export const Navigator = createAppContainer(RootStack);

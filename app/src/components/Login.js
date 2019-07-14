@@ -91,7 +91,9 @@ class Login extends Component {
             <Button
               type="button"
               onPress={() => {
-                /* open popup*/
+                this.props.navigation.navigate("ExternalLogin", {
+                  key: "google"
+                });
               }}
               full
               rounded

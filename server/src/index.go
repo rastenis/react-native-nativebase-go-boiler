@@ -13,6 +13,8 @@ import (
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 // Person : stores a single person's data
@@ -41,6 +43,20 @@ type Response struct {
 type user struct {
 	Email    string
 	Password string
+}
+
+var googleOauthConfig *oauth2.Config
+
+var googleRandomState="TODO:randomized"
+
+func init() {
+	googleOauthConfig = &oauth2.Config{
+		RedirectURL: 	os.Getenv("GOOGLE_REDIRECT_URL"),
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
+	}
 }
 
 
@@ -231,6 +247,11 @@ func main() {
 		}
 
 		res.WriteHeader(http.StatusOK)
+	})
+
+	router.HandleFunc("/auth/google", func(res http.ResponseWriter, req *http.Request) {
+		url := googleOauthConfig.AuthCodeURL(googleRandomState)
+		http.Redirect(res, req, url, http.StatusTemporaryRedirect)
 	})
 
 	log.Println("Listening on port 8080")

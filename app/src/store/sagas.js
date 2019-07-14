@@ -4,8 +4,7 @@ import * as mutations from "./mutations";
 import { Alert } from "react-native";
 import NavigationService from "../components/NavigationService";
 import { fetchSession, storeSession } from "./localStorage";
-
-const url = `http://10.0.2.2:8080`;
+import { url } from "../../config.json";
 
 axios.interceptors.request.use(request => {
   console.log("Starting Request", request);
