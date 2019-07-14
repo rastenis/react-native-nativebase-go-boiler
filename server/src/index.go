@@ -249,9 +249,10 @@ func main() {
 		res.WriteHeader(http.StatusOK)
 	})
 
-	router.HandleFunc("/auth/google", func(res http.ResponseWriter, req *http.Request) {
-		url := googleOauthConfig.AuthCodeURL(googleRandomState)
-		http.Redirect(res, req, url, http.StatusTemporaryRedirect)
+	router.HandleFunc("/google/auth", func(res http.ResponseWriter, req *http.Request) {
+		url := googleOauthConfig.AuthCodeURL(googleRandomState)+"&suppress_webview_warning=true"
+		log.Println(url)
+		http.Redirect(res, req, url, http.StatusFound)
 	})
 
 	log.Println("Listening on port "+os.Getenv("PORT"))
