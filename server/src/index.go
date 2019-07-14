@@ -254,6 +254,6 @@ func main() {
 		http.Redirect(res, req, url, http.StatusTemporaryRedirect)
 	})
 
-	log.Println("Listening on port 8080")
-	http.ListenAndServe(":8080", router)
+	log.Println("Listening on port "+os.Getenv("PORT"))
+	http.ListenAndServe(":"+ os.Getenv("PORT"), router)
 }
