@@ -45,11 +45,19 @@ type Response struct {
 type user struct {
 	Email    string
 	Password string
+	Tokens   []string
+	Profile  profile
 }
 
-type googleUserData struct {
+type oauthUserData struct {
 	Email   string
-	Id      string
+	ID      string
+	Picture string
+	Name    string
+}
+
+type profile struct {
+	Name    string
 	Picture string
 }
 
@@ -69,7 +77,7 @@ func init() {
 		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 		Endpoint:     google.Endpoint,
 	}
 
@@ -297,7 +305,6 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Println(data.Id)
 	// sending an OTC to the user.
 	// secured WebBrowser does not permit header modifications, and the
 	// Google redirect drops external headers as well. Storing this one-time-use token
@@ -306,20 +313,97 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 
 	// storing data
 	ctx := context.Background()
-	cached, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "data": data})
+	_, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "data": data})
 	if creationError != nil {
 		log.Println("OTC Generation failed.")
 		log.Println(creationError)
 	}
 
-	log.Println(cached)
-
 	http.Redirect(res, req, strings.Split(req.FormValue("state"), "|")[1]+"provider=google&success=true&code="+generatedOTC, http.StatusTemporaryRedirect)
 }
 
-func getUserDataFromGoogle(code string) (result googleUserData, e error) {
+func oauthLink(res http.ResponseWriter, req *http.Request) {
+	// decoding userdata
+	log.Println(req.Form.Get("code") + " is linking...")
+
+	res.Header().Set("Content-Type", "application/json")
+
+	// fetching cached data
+	ctx := context.Background()
+	foundCached := DB.Collection("cache").FindOne(ctx, bson.M{"code": req.Form.Get("code")})
+	var data oauthUserData
+	decodeError := foundCached.Decode(&data)
+	if decodeError != nil {
+		log.Println(decodeError)
+		log.Println("Cache fetch failed. Can not link user oauth.")
+		response, _ := json.Marshal(Response{false, "Internal error."})
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write(response)
+		return
+	}
+
+	// setting session data
+	session, _ := store.Get(req, "boiler-session")
+
+	ctx := context.Background()
+	foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": data.Email})
+	var decodedFound user
+	decodeError := foundUser.Decode(&decodedFound)
+
+	// TODO: google OR twitter
+	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google": data.Email})
+	var decodedFoundUserWithToken user
+	decodeErrorUserWithToken := foundUser.Decode(&decodedFoundUserWithToken)
+
+	if decodeErrorUserWithToken == nil {
+		if session.Values["auth"] == true {
+			log.Println("Logging user in.")
+			// foundUserWithToken
+			response, _ := json.Marshal(Response{true, "Successfully logged in!"})
+			res.Write(response)
+			return
+		} else {
+			log.Println("This Google account is already linked.")
+			response, _ := json.Marshal(Response{false, "This Google account is already linked."})
+			res.WriteHeader(http.StatusBadRequest)
+			res.Write(response)
+			return
+		}
+	}
+
+	if session.Values["auth"] == true {
+		// logged in. Attempting to link social account.
+		// linking...
+	} else {
+		// creating a new user if email is not taken...
+		if decodeError != nil {
+			log.Println("This email account is already in use.")
+			response, _ := json.Marshal(Response{false, "This email account is already in use."})
+			res.WriteHeader(http.StatusBadRequest)
+			res.Write(response)
+			return
+		}
+		// creating user...
+
+		// setting session values
+		// set profile data, etc.
+		// session.Values["auth"] = true // now able to get users in the index page
+		// if err = sessions.Save(req, res); err != nil {
+		// 	log.Printf("Error saving session: %v", err)
+		// }
+
+		// sending a success response
+		response, err := json.Marshal(Response{true, "Successfully logged in!"})
+		if err != nil {
+			log.Println("Could not marshal response")
+		}
+		res.Write(response)
+	}
+}
+
+func getUserDataFromGoogle(code string) (result oauthUserData, e error) {
 	// Use code to get token and get user info from Google.
-	var receivedGoogleData googleUserData
+	var receivedGoogleData oauthUserData
 
 	token, err := googleOauthConfig.Exchange(context.Background(), code)
 	if err != nil {
