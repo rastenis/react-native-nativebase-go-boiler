@@ -32,7 +32,7 @@ class Login extends Component {
 
   componentDidMount() {
     Linking.addEventListener("url", url => {
-      this._handleUrl(url.url);
+      this._handleAuthRedirect(url.url);
     });
   }
 
@@ -41,13 +41,22 @@ class Login extends Component {
     Linking.removeEventListener("url", this.handleOpenURL);
   }
 
-  _handleUrl = url => {
-    console.log("URL:", url);
+  _handleAuthRedirect = url => {
+    let pars = {};
+    url
+      .split("/--/?")[1]
+      .split("&")
+      .forEach(queryItem => {
+        let s = queryItem.split("=");
+        pars[s[0]] = s[1];
+      });
+
+    console.log("Auth:", pars.provider, "Status:", pars.success);
   };
 
-  redirectToAuth = () => {
-    WebBrowser.openAuthSessionAsync(
-      `${url}/auth/google?redirectUrl=${Linking.makeUrl("/?")}`
+  redirectToAuth = provider => {
+    WebBrowser.openBrowserAsync(
+      `${url}/auth/${provider}?redirectUrl=${Linking.makeUrl("/?")}`
     );
   };
 
@@ -114,7 +123,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={this.redirectToAuth}
+              onPress={this.redirectToAuth.bind(this, "google")}
               full
               rounded
               light
@@ -125,7 +134,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={this.redirectToAuth}
+              onPress={this.redirectToAuth.bind(this, "twitter")}
               full
               rounded
               light

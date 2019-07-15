@@ -294,7 +294,7 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 
 	log.Println(data.Id)
 
-	http.Redirect(res, req, strings.Split(req.FormValue("state"), "|")[1], http.StatusTemporaryRedirect)
+	http.Redirect(res, req, strings.Split(req.FormValue("state"), "|")[1]+"provider=google&success=true", http.StatusTemporaryRedirect)
 }
 
 func getUserDataFromGoogle(code string) (result googleUserData, e error) {
