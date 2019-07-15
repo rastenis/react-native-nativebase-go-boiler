@@ -16,7 +16,8 @@ import {
 } from "native-base";
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
-import { Linking } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import { Linking } from "expo";
 import { url } from "../../../config.json";
 
 class Login extends Component {
@@ -29,14 +30,25 @@ class Login extends Component {
     };
   }
 
-  componentWillMount() {
-    Linking.addEventListener("/", () => {
-      console.log("Back.");
+  componentDidMount() {
+    Linking.addEventListener("url", url => {
+      this._handleUrl(url.url);
     });
   }
 
-  _handleOpenWithLinking = () => {
-    Linking.openURL(url + "/auth/google");
+  componentWillUnmount() {
+    // Remove event listener
+    Linking.removeEventListener("url", this.handleOpenURL);
+  }
+
+  _handleUrl = url => {
+    console.log("URL:", url);
+  };
+
+  redirectToAuth = () => {
+    WebBrowser.openAuthSessionAsync(
+      `${url}/auth/google?redirectUrl=${Linking.makeUrl("/?")}`
+    );
   };
 
   onChange = (name, text) => {
@@ -102,7 +114,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={this._handleOpenWithLinking}
+              onPress={this.redirectToAuth}
               full
               rounded
               light
@@ -113,7 +125,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={this._handleOpenWithLinking}
+              onPress={this.redirectToAuth}
               full
               rounded
               light

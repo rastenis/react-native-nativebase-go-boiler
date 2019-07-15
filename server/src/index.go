@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -31,7 +32,8 @@ type people struct {
 // SessionData : to send back session data
 type SessionData struct {
 	// User ~~userdata
-	Auth bool
+	Auth           bool
+	AppRedirectUrl string
 }
 
 // Response : used for returning status data to user
@@ -51,9 +53,9 @@ type googleUserData struct {
 	Picture string
 }
 
+var store *sessions.CookieStore
 var googleOauthConfig *oauth2.Config
-
-var googleRandomState = "randomize123918230192830this-128931-0"
+var googleRandomState = "randomizethis123918230192830"
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
@@ -70,17 +72,17 @@ func init() {
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
-}
 
-func main() {
-
-	var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET1")),
+	store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET1")),
 		[]byte(os.Getenv("SESSION_SECRET2")))
 
 	store.Options = &sessions.Options{
 		MaxAge:   3600 * 8, // 8 hours
 		HttpOnly: true,
 	}
+}
+
+func main() {
 
 	// setting up database
 	DBSetup()
@@ -99,7 +101,7 @@ func main() {
 		if !ok {
 			authStatus = false
 		}
-		sessionData := SessionData{authStatus}
+		sessionData := SessionData{authStatus, ""}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -261,13 +263,23 @@ func main() {
 }
 
 func oauthGoogleRedirect(res http.ResponseWriter, req *http.Request) {
-	url := googleOauthConfig.AuthCodeURL(googleRandomState)
-	http.Redirect(res, req, url, http.StatusFound)
+
+	keys, ok := req.URL.Query()["redirectUrl"]
+
+	if !ok || len(keys[0]) < 1 {
+		log.Println("Redirection URL is missing.")
+		return
+	}
+	key := keys[0]
+
+	url := googleOauthConfig.AuthCodeURL(googleRandomState + "|" + string(key))
+	http.Redirect(res, req, url, http.StatusTemporaryRedirect)
 }
 
 func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 	// Read oauthState from Cookie
-	if req.FormValue("state") != googleRandomState {
+
+	if strings.Split(req.FormValue("state"), "|")[0] != googleRandomState {
 		log.Println("invalid oauth google state")
 		http.Redirect(res, req, "/", http.StatusTemporaryRedirect)
 		return
@@ -281,7 +293,8 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(data.Id)
-	// link back to app
+
+	http.Redirect(res, req, strings.Split(req.FormValue("state"), "|")[1], http.StatusTemporaryRedirect)
 }
 
 func getUserDataFromGoogle(code string) (result googleUserData, e error) {
@@ -300,7 +313,6 @@ func getUserDataFromGoogle(code string) (result googleUserData, e error) {
 
 	// retrieving user id
 	decoder := json.NewDecoder(response.Body)
-
 	decoder.Decode(&receivedGoogleData)
 
 	if err != nil {
