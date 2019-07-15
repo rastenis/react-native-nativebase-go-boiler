@@ -45,13 +45,26 @@ type user struct {
 	Password string
 }
 
+type googleUserData struct {
+	Email   string
+	Id      string
+	Picture string
+}
+
 var googleOauthConfig *oauth2.Config
 
-var googleRandomState="TODO:randomized"
+var googleRandomState = "randomize123918230192830this-128931-0"
+
+const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL: 	os.Getenv("GOOGLE_REDIRECT_URL"),
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
@@ -59,15 +72,10 @@ func init() {
 	}
 }
 
-
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET1")),
-[]byte(os.Getenv("SESSION_SECRET2")))
+		[]byte(os.Getenv("SESSION_SECRET2")))
 
 	store.Options = &sessions.Options{
 		MaxAge:   3600 * 8, // 8 hours
@@ -87,10 +95,9 @@ func main() {
 
 		// send back the session data
 		session, _ := store.Get(req, "boiler-session")
-		log.Println(session.Values["auth"])
 		authStatus, ok := session.Values["auth"].(bool)
 		if !ok {
-			log.Println("Couldnt cast session auth to bool.")
+			authStatus = false
 		}
 		sessionData := SessionData{authStatus}
 		js, err := json.Marshal(sessionData)
@@ -242,19 +249,62 @@ func main() {
 		// deleting session
 		session, _ := store.Get(req, "boiler-session")
 		session.Options.MaxAge = -1
-		if err = sessions.Save(req, res); err != nil {
-			log.Printf("Error saving session: %v", err)
-		}
 
 		res.WriteHeader(http.StatusOK)
 	})
 
-	router.HandleFunc("/google/auth", func(res http.ResponseWriter, req *http.Request) {
-		url := googleOauthConfig.AuthCodeURL(googleRandomState)+"&suppress_webview_warning=true"
-		log.Println(url)
-		http.Redirect(res, req, url, http.StatusFound)
-	})
+	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")
+	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
 
-	log.Println("Listening on port "+os.Getenv("PORT"))
-	http.ListenAndServe(":"+ os.Getenv("PORT"), router)
+	log.Println("Listening on port " + os.Getenv("PORT"))
+	http.ListenAndServe(":"+os.Getenv("PORT"), router)
+}
+
+func oauthGoogleRedirect(res http.ResponseWriter, req *http.Request) {
+	url := googleOauthConfig.AuthCodeURL(googleRandomState)
+	http.Redirect(res, req, url, http.StatusFound)
+}
+
+func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
+	// Read oauthState from Cookie
+	if req.FormValue("state") != googleRandomState {
+		log.Println("invalid oauth google state")
+		http.Redirect(res, req, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	data, err := getUserDataFromGoogle(req.FormValue("code"))
+	if err != nil {
+		log.Println(err.Error())
+		http.Redirect(res, req, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	log.Println(data.Id)
+	// link back to app
+}
+
+func getUserDataFromGoogle(code string) (result googleUserData, e error) {
+	// Use code to get token and get user info from Google.
+	var receivedGoogleData googleUserData
+
+	token, err := googleOauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return receivedGoogleData, fmt.Errorf("code exchange wrong: %s", err.Error())
+	}
+	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
+	if err != nil {
+		return receivedGoogleData, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	// retrieving user id
+	decoder := json.NewDecoder(response.Body)
+
+	decoder.Decode(&receivedGoogleData)
+
+	if err != nil {
+		return receivedGoogleData, fmt.Errorf("failed read response: %s", err.Error())
+	}
+	return receivedGoogleData, nil
 }

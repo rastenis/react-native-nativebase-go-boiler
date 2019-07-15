@@ -9,7 +9,6 @@ import {
   createAppContainer,
   createStackNavigator
 } from "react-navigation";
-import { ExternalLogin } from "./ExternalLogin";
 
 const Nav = createDrawerNavigator(
   {
@@ -28,9 +27,6 @@ const RootStack = createStackNavigator(
   {
     Main: {
       screen: Nav
-    },
-    ExternalLogin: {
-      screen: ExternalLogin
     }
   },
   {

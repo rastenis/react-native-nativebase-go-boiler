@@ -16,7 +16,8 @@ import {
 } from "native-base";
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
-import { Google } from "expo";
+import { Linking } from "react-native";
+import { url } from "../../../config.json";
 
 class Login extends Component {
   constructor(...args) {
@@ -28,19 +29,14 @@ class Login extends Component {
     };
   }
 
-  signIn = async () => {
-    try {
-      const { type, accessToken, user } = await Google.logInAsync({
-        androidClientId:
-          "947577570349-70204mffn1ica05h8v4745e7isha71eq.apps.googleusercontent.com",
-        //iosClientId: if needed
-        scopes: ["profile", "email"]
-      });
-      console.log(type, accessToken, user);
-      console.log(result);
-    } catch (e) {
-      console.log("error", e);
-    }
+  componentWillMount() {
+    Linking.addEventListener("/", () => {
+      console.log("Back.");
+    });
+  }
+
+  _handleOpenWithLinking = () => {
+    Linking.openURL(url + "/auth/google");
   };
 
   onChange = (name, text) => {
@@ -106,9 +102,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={() => {
-                this.signIn();
-              }}
+              onPress={this._handleOpenWithLinking}
               full
               rounded
               light
@@ -119,9 +113,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={() => {
-                /* open popup*/
-              }}
+              onPress={this._handleOpenWithLinking}
               full
               rounded
               light
