@@ -80,12 +80,17 @@ func init() {
 		MaxAge:   3600 * 8, // 8 hours
 		HttpOnly: true,
 	}
+
 }
 
 func main() {
 
 	// setting up database
 	DBSetup()
+
+	// clearing cache
+	ctx := context.Background()
+	DB.Collection("cache").DeleteMany(ctx, bson.M{})
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
@@ -293,8 +298,23 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(data.Id)
+	// sending an OTC to the user.
+	// secured WebBrowser does not permit header modifications, and the
+	// Google redirect drops external headers as well. Storing this one-time-use token
+	// for the user to access with their main (axios) session.
+	generatedOTC := RandStringRunes(15)
 
-	http.Redirect(res, req, strings.Split(req.FormValue("state"), "|")[1]+"provider=google&success=true", http.StatusTemporaryRedirect)
+	// storing data
+	ctx := context.Background()
+	cached, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "data": data})
+	if creationError != nil {
+		log.Println("OTC Generation failed.")
+		log.Println(creationError)
+	}
+
+	log.Println(cached)
+
+	http.Redirect(res, req, strings.Split(req.FormValue("state"), "|")[1]+"provider=google&success=true&code="+generatedOTC, http.StatusTemporaryRedirect)
 }
 
 func getUserDataFromGoogle(code string) (result googleUserData, e error) {

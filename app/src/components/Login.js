@@ -51,7 +51,14 @@ class Login extends Component {
         pars[s[0]] = s[1];
       });
 
-    console.log("Auth:", pars.provider, "Status:", pars.success);
+    console.log(
+      "Auth:",
+      pars.provider,
+      "Status:",
+      pars.success,
+      "OTC",
+      pars.code
+    );
   };
 
   redirectToAuth = provider => {
