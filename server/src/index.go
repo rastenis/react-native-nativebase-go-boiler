@@ -67,6 +67,10 @@ type profile struct {
 	Picture string
 }
 
+type otc struct {
+	Code string
+}
+
 var store *sessions.CookieStore
 var googleOauthConfig *oauth2.Config
 var googleRandomState = "randomizethis123918230192830"
@@ -276,6 +280,7 @@ func main() {
 
 	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")
 	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
+	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
 
 	log.Println("Listening on port " + os.Getenv("PORT"))
 	http.ListenAndServe(":"+os.Getenv("PORT"), router)
@@ -319,7 +324,7 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 
 	// storing data
 	ctx := context.Background()
-	_, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "email": data.Email, "id": data.ID, "picture": data.Picture, "name": data.Name, "accessToken": data.AccessToken})
+	_, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "email": data.Email, "id": data.ID, "picture": data.Picture, "name": data.Name, "accessToken": req.FormValue("code")})
 	if creationError != nil {
 		log.Println("OTC Generation failed.")
 		log.Println(creationError)
@@ -330,13 +335,19 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 
 func oauthLink(res http.ResponseWriter, req *http.Request) {
 	// decoding userdata
-	log.Println(req.Form.Get("code") + " is linking...")
+	decoder := json.NewDecoder(req.Body)
+	var dec otc
+	err := decoder.Decode(&dec)
+	if err != nil {
+		log.Panicln(err)
+	}
+	log.Println(dec.Code + " is linking...")
 
 	res.Header().Set("Content-Type", "application/json")
 
 	// fetching cached data
 	ctx := context.Background()
-	foundCached := DB.Collection("cache").FindOne(ctx, bson.M{"code": req.Form.Get("code")})
+	foundCached := DB.Collection("cache").FindOne(ctx, bson.M{"code": dec.Code})
 	var data oauthUserData
 	decodeError := foundCached.Decode(&data)
 	if decodeError != nil {
@@ -352,11 +363,12 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	session, _ := store.Get(req, "boiler-session")
 
 	foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": data.Email})
+
 	var decodedFound user
 	decodeError = foundUser.Decode(&decodedFound)
 
 	// TODO: google OR twitter
-	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google": data.ID})
+	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google.id": data.ID})
 	var decodedFoundUserWithToken user
 	decodeErrorUserWithToken := foundUser.Decode(&decodedFoundUserWithToken)
 
@@ -372,13 +384,13 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 			response, _ := json.Marshal(Response{true, "Successfully logged in!"})
 			res.Write(response)
 			return
-		} else {
-			log.Println("This Google account is already linked.")
-			response, _ := json.Marshal(Response{false, "This Google account is already linked."})
-			res.WriteHeader(http.StatusBadRequest)
-			res.Write(response)
-			return
 		}
+
+		log.Println("This Google account is already linked.")
+		response, _ := json.Marshal(Response{false, "This Google account is already linked."})
+		res.WriteHeader(http.StatusBadRequest)
+		res.Write(response)
+		return
 	}
 
 	if session.Values["auth"] == true {
@@ -386,7 +398,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 		// linking...
 	} else {
 		// creating a new user if email is not taken...
-		if decodeError != nil {
+		if decodeError == nil {
 			log.Println("There is already an account associated with this email address.")
 			response, _ := json.Marshal(Response{false, "There is already an account associated with this email address."})
 			res.WriteHeader(http.StatusBadRequest)
