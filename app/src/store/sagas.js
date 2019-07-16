@@ -41,7 +41,7 @@ export function* authenticationSaga() {
 
 export function* OTCAuthenticationSaga() {
   while (true) {
-    const { code } = yield take(mutations.REQUEST_AUTH);
+    const { code } = yield take(mutations.REQUEST_AUTH_OTC);
     try {
       const { headers } = yield axios.post(`${url}/api/authOTC`, {
         code

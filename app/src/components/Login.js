@@ -32,7 +32,7 @@ class Login extends Component {
 
   componentDidMount() {
     Linking.addEventListener("url", url => {
-      this._handleAuthRedirect(url.url);
+      this.handleAuthRedirect(url.url);
     });
   }
 
@@ -41,26 +41,28 @@ class Login extends Component {
     Linking.removeEventListener("url", this.handleOpenURL);
   }
 
-  _handleAuthRedirect = url => {
-    let pars = {};
+  handleAuthRedirect = url => {
+    let params = {};
     url
       .split("/--/?")[1]
       .split("&")
       .forEach(queryItem => {
         let s = queryItem.split("=");
-        pars[s[0]] = s[1];
+        params[s[0]] = s[1];
       });
 
     console.log(
       "Auth:",
-      pars.provider,
+      params.provider,
       "Status:",
-      pars.success,
+      params.success,
       "OTC",
-      pars.code
+      params.code
     );
 
-    this.props.authenticateUserViaOTC(pars.code);
+    this.props.authenticateUserViaOTC(params.code);
+
+    return;
   };
 
   redirectToAuth = provider => {
@@ -164,12 +166,13 @@ const authenticateUser = (e, p) => {
 };
 
 // using one time code to access oauth data stored in server
-const authenticateUserViaOTC = (e, p) => {
-  return mutations.requestAuthViaOTC(e, p);
+const authenticateUserViaOTC = code => {
+  return mutations.requestAuthViaOTC(code);
 };
 
 const mapDispatchToProps = {
-  authenticateUser
+  authenticateUser,
+  authenticateUserViaOTC
 };
 
 export const ConnectedLogin = connect(
