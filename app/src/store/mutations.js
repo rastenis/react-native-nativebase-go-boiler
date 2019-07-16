@@ -19,6 +19,11 @@ export const requestAuth = (email, password) => ({
   password
 });
 
+export const requestAuthViaOTC = code => ({
+  type: REQUEST_AUTH_OTC,
+  code
+});
+
 export const processAuth = (status = AUTHENTICATING) => ({
   type: PROCESSING_AUTH,
   authenticated: status

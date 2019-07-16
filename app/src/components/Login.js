@@ -59,6 +59,8 @@ class Login extends Component {
       "OTC",
       pars.code
     );
+
+    this.props.authenticateUserViaOTC(pars.code);
   };
 
   redirectToAuth = provider => {
@@ -159,6 +161,11 @@ class Login extends Component {
 
 const authenticateUser = (e, p) => {
   return mutations.requestAuth(e, p);
+};
+
+// using one time code to access oauth data stored in server
+const authenticateUserViaOTC = (e, p) => {
+  return mutations.requestAuthViaOTC(e, p);
 };
 
 const mapDispatchToProps = {
