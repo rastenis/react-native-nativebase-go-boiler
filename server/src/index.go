@@ -32,8 +32,7 @@ type people struct {
 // SessionData : to send back session data
 type SessionData struct {
 	// User ~~userdata
-	Auth           bool
-	AppRedirectUrl string
+	Auth bool
 }
 
 // Response : used for returning status data to user
@@ -42,18 +41,25 @@ type Response struct {
 	Msg     string
 }
 
+type oauthProvider struct {
+	IS          string `json:"id" bson:"id"`
+	AccessToken string `json:"accessToken" bson:"accessToken"`
+}
+
 type user struct {
-	Email    string
-	Password string
-	Tokens   []string
-	Profile  profile
+	Email    string         `json:"email" bson:"email"`
+	Password string         `json:"password" bson:"password"`
+	Google   *oauthProvider `json:"oauthProvider" bson:"oauthProvider,omitempty"`
+	Twitter  *oauthProvider `json:"oauthProvider" bson:"oauthProvider,omitempty"`
+	Profile  *profile       `json:"profile" bson:"profile,omitempty"`
 }
 
 type oauthUserData struct {
-	Email   string
-	ID      string
-	Picture string
-	Name    string
+	Email       string
+	ID          string
+	Picture     string
+	Name        string
+	AccessToken string
 }
 
 type profile struct {
@@ -65,7 +71,7 @@ var store *sessions.CookieStore
 var googleOauthConfig *oauth2.Config
 var googleRandomState = "randomizethis123918230192830"
 
-const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
+const oauthGoogleURLAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 func init() {
 	err := godotenv.Load()
@@ -114,7 +120,7 @@ func main() {
 		if !ok {
 			authStatus = false
 		}
-		sessionData := SessionData{authStatus, ""}
+		sessionData := SessionData{authStatus}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -313,7 +319,7 @@ func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
 
 	// storing data
 	ctx := context.Background()
-	_, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "data": data})
+	_, creationError := DB.Collection("cache").InsertOne(ctx, bson.M{"code": generatedOTC, "email": data.Email, "id": data.ID, "picture": data.Picture, "name": data.Name, "accessToken": data.AccessToken})
 	if creationError != nil {
 		log.Println("OTC Generation failed.")
 		log.Println(creationError)
@@ -345,20 +351,24 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	// setting session data
 	session, _ := store.Get(req, "boiler-session")
 
-	ctx := context.Background()
 	foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": data.Email})
 	var decodedFound user
-	decodeError := foundUser.Decode(&decodedFound)
+	decodeError = foundUser.Decode(&decodedFound)
 
 	// TODO: google OR twitter
-	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google": data.Email})
+	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google": data.ID})
 	var decodedFoundUserWithToken user
 	decodeErrorUserWithToken := foundUser.Decode(&decodedFoundUserWithToken)
 
 	if decodeErrorUserWithToken == nil {
 		if session.Values["auth"] == true {
 			log.Println("Logging user in.")
-			// foundUserWithToken
+			session.Values["auth"] = true // now able to get users in the index page
+			session.Values["user"] = foundUserWithToken
+			err := sessions.Save(req, res)
+			if err != nil {
+				log.Printf("Error saving session: %v", err)
+			}
 			response, _ := json.Marshal(Response{true, "Successfully logged in!"})
 			res.Write(response)
 			return
@@ -377,20 +387,29 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	} else {
 		// creating a new user if email is not taken...
 		if decodeError != nil {
-			log.Println("This email account is already in use.")
-			response, _ := json.Marshal(Response{false, "This email account is already in use."})
+			log.Println("There is already an account associated with this email address.")
+			response, _ := json.Marshal(Response{false, "There is already an account associated with this email address."})
 			res.WriteHeader(http.StatusBadRequest)
 			res.Write(response)
 			return
 		}
+
 		// creating user...
+		creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": data.Email, "google": bson.M{"id": data.ID, "accessToken": data.AccessToken}})
+		log.Println(creationResult)
+
+		if creationError != nil {
+			log.Printf("Could not create new account. %s", creationError)
+		}
 
 		// setting session values
-		// set profile data, etc.
-		// session.Values["auth"] = true // now able to get users in the index page
-		// if err = sessions.Save(req, res); err != nil {
-		// 	log.Printf("Error saving session: %v", err)
-		// }
+		session.Values["auth"] = true // now able to get users in the index page
+		session.Values["user"] = foundUserWithToken
+
+		err := sessions.Save(req, res)
+		if err != nil {
+			log.Printf("Error saving session: %v", err)
+		}
 
 		// sending a success response
 		response, err := json.Marshal(Response{true, "Successfully logged in!"})
@@ -409,7 +428,8 @@ func getUserDataFromGoogle(code string) (result oauthUserData, e error) {
 	if err != nil {
 		return receivedGoogleData, fmt.Errorf("code exchange wrong: %s", err.Error())
 	}
-	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
+
+	response, err := http.Get(oauthGoogleURLAPI + token.AccessToken)
 	if err != nil {
 		return receivedGoogleData, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
