@@ -15,7 +15,7 @@ export function* authenticationSaga() {
   while (true) {
     const { email, password } = yield take(mutations.REQUEST_AUTH);
     try {
-      const { headers } = yield axios.post(`${url}/api/auth`, {
+      const { headers, data } = yield axios.post(`${url}/api/auth`, {
         email,
         password
       });
@@ -24,6 +24,8 @@ export function* authenticationSaga() {
       yield storeSession(headers["set-cookie"][0]);
 
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
+      yield put(mutations.setData({ hasPassword: data.HasPassword }));
+      yield put(mutations.setData({ Google: data.Google }));
 
       // requesting people
       yield put({
