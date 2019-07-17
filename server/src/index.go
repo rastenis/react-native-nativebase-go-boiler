@@ -134,16 +134,13 @@ func main() {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(sessionData.Auth)
 
 		res.Header().Set("Content-Type", "application/json")
 		res.Write(js)
 	})
 
 	router.HandleFunc("/api/people", func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("Retreiving people...")
-
-		// send back the session data
+		// send back mock people
 		session, _ := store.Get(req, "boiler-session")
 		log.Println(session.Values["auth"])
 		authStatus, ok := session.Values["auth"].(bool)
@@ -352,7 +349,6 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Println(dec.Code + " is linking...")
 
 	res.Header().Set("Content-Type", "application/json")
 
@@ -382,9 +378,6 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google.id": data.ID})
 	var decodedFoundUserWithToken user
 	decodeErrorUserWithToken := foundUserWithToken.Decode(&decodedFoundUserWithToken)
-
-	log.Println(decodeErrorUserWithToken)
-	log.Println(decodeError)
 
 	if decodeErrorUserWithToken == nil {
 		log.Println(session.Values["auth"])
@@ -422,7 +415,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 		}
 
 		// creating user...
-		creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": data.Email, "google": bson.M{"id": data.ID, "accessToken": data.AccessToken}})
+		creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": data.Email, "google": bson.M{"id": data.ID, "accessToken": data.AccessToken}, "profile": bson.M{"name": data.Name, "picture": data.Picture}})
 		log.Println(creationResult)
 
 		if creationError != nil {
