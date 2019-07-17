@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -31,8 +32,8 @@ type people struct {
 
 // SessionData : to send back session data
 type SessionData struct {
-	// User ~~userdata
-	Auth bool
+	UserID primitive.ObjectID
+	Auth   bool
 }
 
 // Response : used for returning status data to user
@@ -47,11 +48,12 @@ type oauthProvider struct {
 }
 
 type user struct {
-	Email    string         `json:"email" bson:"email"`
-	Password string         `json:"password" bson:"password"`
-	Google   *oauthProvider `json:"oauthProvider" bson:"oauthProvider,omitempty"`
-	Twitter  *oauthProvider `json:"oauthProvider" bson:"oauthProvider,omitempty"`
-	Profile  *profile       `json:"profile" bson:"profile,omitempty"`
+	ID       primitive.ObjectID `json:"id" bson:"_id"`
+	Email    string             `json:"email" bson:"email"`
+	Password string             `json:"password" bson:"password"`
+	Google   *oauthProvider     `json:"google" bson:"google,omitempty"`
+	Twitter  *oauthProvider     `json:"twitter" bson:"twitter,omitempty"`
+	Profile  *profile           `json:"profile" bson:"profile,omitempty"`
 }
 
 type oauthUserData struct {
@@ -124,7 +126,9 @@ func main() {
 		if !ok {
 			authStatus = false
 		}
-		sessionData := SessionData{authStatus}
+		userID, _ := session.Values["id"].(primitive.ObjectID)
+
+		sessionData := SessionData{userID, authStatus}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -203,6 +207,7 @@ func main() {
 		// setting session data
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
+		session.Values["id"] = u.ID
 		if err = sessions.Save(req, res); err != nil {
 			log.Printf("Error saving session: %v", err)
 		}
@@ -257,6 +262,8 @@ func main() {
 		// setting session data
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
+		session.Values["id"] = creationResult.InsertedID.(string)
+
 		if err = sessions.Save(req, res); err != nil {
 			log.Printf("Error saving session: %v", err)
 		}
@@ -274,6 +281,10 @@ func main() {
 		// deleting session
 		session, _ := store.Get(req, "boiler-session")
 		session.Options.MaxAge = -1
+		err := session.Save(req, res)
+		if err != nil {
+			log.Fatal("failed to delete session", err)
+		}
 
 		res.WriteHeader(http.StatusOK)
 	})
@@ -370,13 +381,17 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	// TODO: google OR twitter
 	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google.id": data.ID})
 	var decodedFoundUserWithToken user
-	decodeErrorUserWithToken := foundUser.Decode(&decodedFoundUserWithToken)
+	decodeErrorUserWithToken := foundUserWithToken.Decode(&decodedFoundUserWithToken)
+
+	log.Println(decodeErrorUserWithToken)
+	log.Println(decodeError)
 
 	if decodeErrorUserWithToken == nil {
-		if session.Values["auth"] == true {
+		log.Println(session.Values["auth"])
+		if session.Values["auth"] != true || session.Values["auth"] == nil {
 			log.Println("Logging user in.")
 			session.Values["auth"] = true // now able to get users in the index page
-			session.Values["user"] = foundUserWithToken
+			session.Values["id"] = decodedFoundUserWithToken.ID.String()
 			err := sessions.Save(req, res)
 			if err != nil {
 				log.Printf("Error saving session: %v", err)
@@ -385,7 +400,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 			res.Write(response)
 			return
 		}
-
+		// user attempting to link account, but an user exists with this ID
 		log.Println("This Google account is already linked.")
 		response, _ := json.Marshal(Response{false, "This Google account is already linked."})
 		res.WriteHeader(http.StatusBadRequest)
@@ -416,7 +431,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 
 		// setting session values
 		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["user"] = foundUserWithToken
+		session.Values["id"] = decodedFoundUserWithToken.ID.String()
 
 		err := sessions.Save(req, res)
 		if err != nil {
