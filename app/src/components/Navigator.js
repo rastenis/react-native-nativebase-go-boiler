@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { ConnectedHome } from "./Home.js";
 import { ConnectedLogin } from "./Login.js";
 import { ConnectedRegistration } from "./Registration.js";
+import { ConnectedProfile } from "./Profile.js";
 import { ConnectedMain } from "./Main.js";
 import { ConnectedSidebar } from "./SideBar.js";
 import {
@@ -15,7 +16,8 @@ const Nav = createDrawerNavigator(
     Home: { screen: ConnectedHome },
     Login: { screen: ConnectedLogin },
     Registration: { screen: ConnectedRegistration },
-    Main: { screen: ConnectedMain }
+    Main: { screen: ConnectedMain },
+    Profile: { screen: ConnectedProfile }
   },
   {
     contentComponent: props => <ConnectedSidebar {...props} />,

@@ -32,8 +32,9 @@ type people struct {
 
 // SessionData : to send back session data
 type SessionData struct {
-	UserID primitive.ObjectID
-	Auth   bool
+	Auth        bool
+	HasPassword bool
+	Google      bool
 }
 
 // Response : used for returning status data to user
@@ -126,9 +127,8 @@ func main() {
 		if !ok {
 			authStatus = false
 		}
-		userID, _ := session.Values["id"].(primitive.ObjectID)
 
-		sessionData := SessionData{userID, authStatus}
+		sessionData := SessionData{authStatus, session.Values["hasPassword"].(bool), session.Values["Google"].(bool)}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -172,7 +172,6 @@ func main() {
 		}
 
 		log.Printf("Logging in user: %s", postedUserData.Email)
-
 		res.Header().Set("Content-Type", "application/json")
 
 		// fetching user
@@ -199,12 +198,23 @@ func main() {
 			return
 		}
 
-		log.Println("Login successful.")
-
 		// setting session data
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
 		session.Values["id"] = u.ID
+
+		if u.Password != "" {
+			session.Values["hasPassword"] = false
+		} else {
+			session.Values["hasPassword"] = true
+		}
+
+		if u.Google != nil {
+			session.Values["google"] = true
+		} else {
+			session.Values["google"] = false
+		}
+
 		if err = sessions.Save(req, res); err != nil {
 			log.Printf("Error saving session: %v", err)
 		}
@@ -260,6 +270,7 @@ func main() {
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
 		session.Values["id"] = creationResult.InsertedID.(string)
+		session.Values["hasPassword"] = true
 
 		if err = sessions.Save(req, res); err != nil {
 			log.Printf("Error saving session: %v", err)
@@ -384,6 +395,14 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 			log.Println("Logging user in.")
 			session.Values["auth"] = true // now able to get users in the index page
 			session.Values["id"] = decodedFoundUserWithToken.ID.String()
+			session.Values["Google"] = true
+
+			if decodedFound.Password != "" {
+				session.Values["hasPassword"] = false
+			} else {
+				session.Values["hasPassword"] = true
+			}
+
 			err := sessions.Save(req, res)
 			if err != nil {
 				log.Printf("Error saving session: %v", err)
@@ -424,6 +443,8 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 		// setting session values
 		session.Values["auth"] = true // now able to get users in the index page
 		session.Values["id"] = decodedFoundUserWithToken.ID.String()
+		session.Values["Google"] = true
+		session.Values["hasPassword"] = false
 
 		err := sessions.Save(req, res)
 		if err != nil {
