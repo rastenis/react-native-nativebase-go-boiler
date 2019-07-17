@@ -52,8 +52,8 @@ type user struct {
 	Email    string             `json:"email" bson:"email"`
 	Password string             `json:"password" bson:"password"`
 	Google   *oauthProvider     `json:"google" bson:"google,omitempty"`
-	Twitter  *oauthProvider     `json:"twitter" bson:"twitter,omitempty"`
-	Profile  *profile           `json:"profile" bson:"profile,omitempty"`
+	// other oauthProviders
+	Profile *profile `json:"profile" bson:"profile,omitempty"`
 }
 
 type oauthUserData struct {
@@ -374,7 +374,6 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	var decodedFound user
 	decodeError = foundUser.Decode(&decodedFound)
 
-	// TODO: google OR twitter
 	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google.id": data.ID})
 	var decodedFoundUserWithToken user
 	decodeErrorUserWithToken := foundUserWithToken.Decode(&decodedFoundUserWithToken)

@@ -143,17 +143,6 @@ class Login extends Component {
               <Icon name="logo-google" />
               <Text>Sign in with Google</Text>
             </Button>
-            <Button
-              type="button"
-              onPress={this.redirectToAuth.bind(this, "twitter")}
-              full
-              rounded
-              light
-              style={{ color: "blue", marginTop: 10 }}
-            >
-              <Icon name="logo-twitter" />
-              <Text>Sign in with Twitter</Text>
-            </Button>
           </Form>
         </Content>
       </Container>
