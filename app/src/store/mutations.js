@@ -1,4 +1,5 @@
 export const REQUEST_AUTH = `REQUEST_AUTH`;
+export const REQUEST_AUTH_OTC = `REQUEST_AUTH_OTC`;
 export const PROCESSING_AUTH = `PROCESSING_AUTH`;
 export const AUTHENTICATING = `AUTHENTICATING`;
 export const AUTHENTICATED = `AUTHENTICATED`;
@@ -17,6 +18,11 @@ export const requestAuth = (email, password) => ({
   type: REQUEST_AUTH,
   email,
   password
+});
+
+export const requestAuthViaOTC = code => ({
+  type: REQUEST_AUTH_OTC,
+  code
 });
 
 export const processAuth = (status = AUTHENTICATING) => ({

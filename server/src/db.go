@@ -31,6 +31,6 @@ func configDB(ctx context.Context) (*mongo.Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mongo client couldn't connect with background context: %v", err)
 	}
-	db := client.Database("boiler")
+	db := client.Database(os.Getenv("DB_NAME"))
 	return db, nil
 }

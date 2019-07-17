@@ -4,8 +4,7 @@ import * as mutations from "./mutations";
 import { Alert } from "react-native";
 import NavigationService from "../components/NavigationService";
 import { fetchSession, storeSession } from "./localStorage";
-
-const url = `http://10.0.2.2:8080`;
+import { url } from "../../../config.json";
 
 axios.interceptors.request.use(request => {
   console.log("Starting Request", request);
@@ -24,7 +23,6 @@ export function* authenticationSaga() {
       // storing session locally.
       yield storeSession(headers["set-cookie"][0]);
 
-      console.log(true);
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
       // requesting people
@@ -35,6 +33,34 @@ export function* authenticationSaga() {
       // request profile, etc.
       NavigationService.navigate("Main");
     } catch (e) {
+      console.log(e);
+      yield put(mutations.processAuth(mutations.AUTH_ERROR));
+    }
+  }
+}
+
+export function* OTCAuthenticationSaga() {
+  while (true) {
+    const { code } = yield take(mutations.REQUEST_AUTH_OTC);
+    try {
+      const { headers } = yield axios.post(`${url}/api/authOTC`, {
+        code
+      });
+
+      // storing session locally.
+      yield storeSession(headers["set-cookie"][0]);
+
+      yield put(mutations.processAuth(mutations.AUTHENTICATED));
+
+      // requesting people
+      yield put({
+        type: mutations.REQUEST_PEOPLE
+      });
+
+      // request profile, etc.
+      NavigationService.navigate("Main");
+    } catch (e) {
+      console.log("Could not login via one time code.");
       console.log(e);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }

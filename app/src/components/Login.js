@@ -16,6 +16,9 @@ import {
 } from "native-base";
 import * as mutations from "../store/mutations";
 import { connect } from "react-redux";
+import * as WebBrowser from "expo-web-browser";
+import { Linking } from "expo";
+import { url } from "../../../config.json";
 
 class Login extends Component {
   constructor(...args) {
@@ -26,6 +29,47 @@ class Login extends Component {
       password: ""
     };
   }
+
+  componentDidMount() {
+    Linking.addEventListener("url", url => {
+      this.handleAuthRedirect(url.url);
+    });
+  }
+
+  componentWillUnmount() {
+    // Remove event listener
+    Linking.removeEventListener("url", this.handleOpenURL);
+  }
+
+  handleAuthRedirect = url => {
+    let params = {};
+    url
+      .split("/--/?")[1]
+      .split("&")
+      .forEach(queryItem => {
+        let s = queryItem.split("=");
+        params[s[0]] = s[1];
+      });
+
+    console.log(
+      "Auth:",
+      params.provider,
+      "Status:",
+      params.success,
+      "OTC",
+      params.code
+    );
+
+    this.props.authenticateUserViaOTC(params.code);
+
+    return;
+  };
+
+  redirectToAuth = provider => {
+    WebBrowser.openBrowserAsync(
+      `${url}/auth/${provider}?redirectUrl=${Linking.makeUrl("/?")}`
+    );
+  };
 
   onChange = (name, text) => {
     this.setState({ [name]: text });
@@ -90,9 +134,7 @@ class Login extends Component {
             </Button>
             <Button
               type="button"
-              onPress={() => {
-                /* open popup*/
-              }}
+              onPress={this.redirectToAuth.bind(this, "google")}
               full
               rounded
               light
@@ -100,19 +142,6 @@ class Login extends Component {
             >
               <Icon name="logo-google" />
               <Text>Sign in with Google</Text>
-            </Button>
-            <Button
-              type="button"
-              onPress={() => {
-                /* open popup*/
-              }}
-              full
-              rounded
-              light
-              style={{ color: "blue", marginTop: 10 }}
-            >
-              <Icon name="logo-twitter" />
-              <Text>Sign in with Twitter</Text>
             </Button>
           </Form>
         </Content>
@@ -125,8 +154,14 @@ const authenticateUser = (e, p) => {
   return mutations.requestAuth(e, p);
 };
 
+// using one time code to access oauth data stored in server
+const authenticateUserViaOTC = code => {
+  return mutations.requestAuthViaOTC(code);
+};
+
 const mapDispatchToProps = {
-  authenticateUser
+  authenticateUser,
+  authenticateUserViaOTC
 };
 
 export const ConnectedLogin = connect(
