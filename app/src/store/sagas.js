@@ -6,16 +6,17 @@ import NavigationService from "../components/NavigationService";
 import { fetchSession, storeSession } from "./localStorage";
 import { url } from "../../../config.json";
 
-axios.interceptors.request.use(request => {
-  console.log("Starting Request", request);
-  return request;
-});
+// use this as a lightweight way to inspect outgoing requests.
+// axios.interceptors.request.use(request => {
+//   console.log("Starting Request", request);
+//   return request;
+// });
 
 export function* authenticationSaga() {
   while (true) {
     const { email, password } = yield take(mutations.REQUEST_AUTH);
     try {
-      const { headers, data } = yield axios.post(`${url}/api/auth`, {
+      const { headers } = yield axios.post(`${url}/api/auth`, {
         email,
         password
       });
@@ -24,8 +25,9 @@ export function* authenticationSaga() {
       yield storeSession(headers["set-cookie"][0]);
 
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
-      yield put(mutations.setData({ hasPassword: data.HasPassword }));
-      yield put(mutations.setData({ Google: data.Google }));
+
+      // getting profile data (for profile page)
+      yield put(mutations.REQUEST_SESSION_FETCH);
 
       // requesting people
       yield put({
@@ -62,7 +64,7 @@ export function* OTCAuthenticationSaga() {
       // request profile, etc.
       NavigationService.navigate("Main");
     } catch (e) {
-      console.log("Could not login via one time code.");
+      Alert.alert("Error", "Could not login via one time code.");
       console.log(e);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
@@ -78,6 +80,15 @@ export function* registrationSaga() {
         password
       });
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
+
+      // no need to fetch full session data, because accounts created via /api/register are always password based and never have oauth tokens.
+      // setting default value
+      yield put(
+        mutations.setData({
+          Google: false,
+          hasPassword: true
+        })
+      );
 
       NavigationService.navigate("Main");
     } catch (e) {
@@ -104,6 +115,14 @@ export function* sessionFetchSaga() {
 
       yield put(
         mutations.processAuth(data.Auth ? mutations.AUTHENTICATED : null)
+      );
+
+      // setting user data
+      yield put(
+        mutations.setData({
+          Google: data.Google,
+          hasPassword: data.HasPassword
+        })
       );
 
       if (data.Auth) {
