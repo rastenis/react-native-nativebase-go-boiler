@@ -19,20 +19,26 @@ import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
 import { Alert } from "react-native";
 
+const initialState = { email: "", password: "", passwordConf: "", errors: [] };
+
 class Registration extends Component {
   constructor(...args) {
     super(...args);
 
-    this.state = {
-      email: "",
-      password: "",
-      passwordConf: "",
-      errors: []
-    };
+    this.state = initialState;
   }
 
   onChange = (name, text) => {
     this.setState({ [name]: text });
+  };
+
+  componentDidMount() {
+    this.clear();
+    this.props.navigation.addListener("willFocus", this.clear);
+  }
+
+  clear = () => {
+    this.setState(initialState);
   };
 
   submitRegistration = () => {

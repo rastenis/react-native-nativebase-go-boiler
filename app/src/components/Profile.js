@@ -24,16 +24,18 @@ import * as WebBrowser from "expo-web-browser";
 import { Linking } from "expo";
 import { url } from "../../../config.json";
 
+const initialState = {
+  oldPassword: "",
+  newPassword: "",
+  newPasswordConf: "",
+  errors: []
+};
+
 class Profile extends Component {
   constructor(...args) {
     super(...args);
 
-    this.state = {
-      oldPassword: "",
-      newPassword: "",
-      newPasswordConf: "",
-      errors: []
-    };
+    this.state = initialState;
   }
 
   onChange = (name, text) => {
@@ -44,7 +46,13 @@ class Profile extends Component {
     Linking.addEventListener("url", url => {
       this.handleAuthRedirect(url.url);
     });
+    this.clear();
+    this.props.navigation.addListener("willFocus", this.clear);
   }
+
+  clear = () => {
+    this.setState(initialState);
+  };
 
   componentWillUnmount() {
     // Remove event listener
