@@ -39,10 +39,8 @@ type SessionData struct {
 
 // Response : used for returning status data to user
 type Response struct {
-	Success     bool
-	Msg         string
-	HasPassword bool
-	Google      bool
+	Success bool
+	Msg     string
 }
 
 type oauthProvider struct {
@@ -130,6 +128,15 @@ func main() {
 			authStatus = false
 		}
 
+		// checking for nil values
+		if session.Values["hasPassword"] == nil {
+			session.Values["hasPassword"] = false
+		}
+
+		if session.Values["Google"] == nil {
+			session.Values["Google"] = false
+		}
+
 		sessionData := SessionData{authStatus, session.Values["hasPassword"].(bool), session.Values["Google"].(bool)}
 		js, err := json.Marshal(sessionData)
 		if err != nil {
@@ -184,7 +191,7 @@ func main() {
 		if decodeError != nil {
 			log.Println(decodeError)
 			log.Println("Login failed. No user.")
-			response, _ := json.Marshal(Response{false, "Invalid login details!", false, false})
+			response, _ := json.Marshal(Response{false, "Invalid login details!"})
 			res.WriteHeader(http.StatusUnauthorized)
 			res.Write(response)
 			return
@@ -194,7 +201,7 @@ func main() {
 		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.Form.Get("password")))
 		if comparisonError == nil {
 			log.Println("Login failed. Wrong password.")
-			response, _ := json.Marshal(Response{false, "Invalid login details!", false, false})
+			response, _ := json.Marshal(Response{false, "Invalid login details!"})
 			res.WriteHeader(http.StatusUnauthorized)
 			res.Write(response)
 			return
@@ -222,7 +229,7 @@ func main() {
 		}
 
 		// sending a success response
-		response, err := json.Marshal(Response{true, "Successfully logged in!", session.Values["hasPassword"].(bool), session.Values["Google"].(bool)})
+		response, err := json.Marshal(Response{true, "Successfully logged in!"})
 		if err != nil {
 			log.Println("Could not marshal response")
 		}
@@ -249,7 +256,7 @@ func main() {
 		decodeError := foundUser.Decode(&dupe)
 		if decodeError == nil {
 			log.Println("Registration failed. Duplicate user.")
-			response, _ := json.Marshal(Response{false, "An user with that email already exists!", false, false})
+			response, _ := json.Marshal(Response{false, "An user with that email already exists!"})
 			res.WriteHeader(http.StatusBadRequest)
 			res.Write(response)
 			return
@@ -280,7 +287,7 @@ func main() {
 		}
 
 		// sending a success response
-		response, err := json.Marshal(Response{true, "Successfully registered!", false, false})
+		response, err := json.Marshal(Response{true, "Successfully registered!"})
 		if err != nil {
 			log.Println("Could not marshal response")
 		}
@@ -374,7 +381,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	if decodeError != nil {
 		log.Println(decodeError)
 		log.Println("Cache fetch failed. Can not link user oauth.")
-		response, _ := json.Marshal(Response{false, "Internal error.", false, false})
+		response, _ := json.Marshal(Response{false, "Internal error."})
 		res.WriteHeader(http.StatusInternalServerError)
 		res.Write(response)
 		return
@@ -410,13 +417,13 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				log.Printf("Error saving session: %v", err)
 			}
-			response, _ := json.Marshal(Response{true, "Successfully logged in!", false, false})
+			response, _ := json.Marshal(Response{true, "Successfully logged in!"})
 			res.Write(response)
 			return
 		}
 		// user attempting to link account, but an user exists with this ID
 		log.Println("This Google account is already linked.")
-		response, _ := json.Marshal(Response{false, "This Google account is already linked.", false, false})
+		response, _ := json.Marshal(Response{false, "This Google account is already linked."})
 		res.WriteHeader(http.StatusBadRequest)
 		res.Write(response)
 		return
@@ -429,7 +436,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 		// creating a new user if email is not taken...
 		if decodeError == nil {
 			log.Println("There is already an account associated with this email address.")
-			response, _ := json.Marshal(Response{false, "There is already an account associated with this email address.", false, false})
+			response, _ := json.Marshal(Response{false, "There is already an account associated with this email address."})
 			res.WriteHeader(http.StatusBadRequest)
 			res.Write(response)
 			return
@@ -455,7 +462,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 		}
 
 		// sending a success response
-		response, err := json.Marshal(Response{true, "Successfully logged in!", false, false})
+		response, err := json.Marshal(Response{true, "Successfully logged in!"})
 		if err != nil {
 			log.Println("Could not marshal response")
 		}
