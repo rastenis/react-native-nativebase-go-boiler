@@ -4,8 +4,6 @@ import {
   Header,
   Content,
   Label,
-  Card,
-  CardItem,
   Form,
   Item,
   Input,
@@ -15,7 +13,9 @@ import {
   Right,
   Icon,
   Body,
-  Title
+  Title,
+  H2,
+  View
 } from "native-base";
 import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
@@ -62,7 +62,10 @@ class Profile extends Component {
       return;
     }
 
-    this.props.requestRegistration(this.state.email, this.state.password);
+    this.props.requestPasswordChange(
+      this.state.oldPassword,
+      this.state.newPassword
+    );
   };
 
   render() {
@@ -82,60 +85,72 @@ class Profile extends Component {
           </Body>
           <Right />
         </Header>
-
         <Content padder>
-          <Card>
-            <CardItem>
-              <Body>
-                <Text>Change password.</Text>
-              </Body>
-            </CardItem>
-          </Card>
-          <Form>
-            <Label htmlFor="oldPasswordField">Old Password</Label>
-            <Item error={this.state.errors.includes("password")}>
-              <Input
-                id="oldPasswordField"
-                name="oldPassword"
-                secureTextEntry={true}
-                placeholder="Old Password"
-                onChangeText={this.onChange.bind(this, "oldPassword")}
-                value={this.state.oldPassword}
-              />
-            </Item>
-            <Label htmlFor="newPasswordField">New Password</Label>
-            <Item error={this.state.errors.includes("password")}>
-              <Input
-                id="newPasswordField"
-                name="newPassword"
-                secureTextEntry={true}
-                placeholder="New Password"
-                onChangeText={this.onChange.bind(this, "newPassword")}
-                value={this.state.newPassword}
-              />
-            </Item>
-            <Label htmlFor="newPasswordFieldConf">Confirm new password</Label>
-            <Item error={this.state.errors.includes("password")}>
-              <Input
-                id="newPasswordFieldConf"
-                name="newPasswordConf"
-                secureTextEntry={true}
-                placeholder="Confirm new password"
-                onChangeText={this.onChange.bind(this, "newPasswordConf")}
-                value={this.state.newPasswordConf}
-              />
-            </Item>
-            <Button
-              type="button"
-              onPress={this.submitPasswordChange}
-              full
-              rounded
-              light
-              style={{ marginTop: 10 }}
-            >
-              <Text>Change password</Text>
-            </Button>
-          </Form>
+          {this.props.hasPassword ? (
+            <Form>
+              <H2>Change Password</H2>
+              <Label htmlFor="oldPasswordField">Old Password</Label>
+              <Item error={this.state.errors.includes("password")}>
+                <Input
+                  id="oldPasswordField"
+                  name="oldPassword"
+                  secureTextEntry={true}
+                  placeholder="Old Password"
+                  onChangeText={this.onChange.bind(this, "oldPassword")}
+                  value={this.state.oldPassword}
+                />
+              </Item>
+              <Label htmlFor="newPasswordField">New Password</Label>
+              <Item error={this.state.errors.includes("password")}>
+                <Input
+                  id="newPasswordField"
+                  name="newPassword"
+                  secureTextEntry={true}
+                  placeholder="New Password"
+                  onChangeText={this.onChange.bind(this, "newPassword")}
+                  value={this.state.newPassword}
+                />
+              </Item>
+              <Label htmlFor="newPasswordFieldConf">Confirm new password</Label>
+              <Item error={this.state.errors.includes("password")}>
+                <Input
+                  id="newPasswordFieldConf"
+                  name="newPasswordConf"
+                  secureTextEntry={true}
+                  placeholder="Confirm new password"
+                  onChangeText={this.onChange.bind(this, "newPasswordConf")}
+                  value={this.state.newPasswordConf}
+                />
+              </Item>
+              <Button
+                type="button"
+                onPress={this.submitPasswordChange}
+                full
+                rounded
+                light
+                style={{ marginTop: 10 }}
+              >
+                <Text>Change password</Text>
+              </Button>
+            </Form>
+          ) : null}
+          <View>
+            <H2>Manage linked accounts</H2>
+            {this.props.Google ? (
+              <Button
+                danger
+                disabled={!this.props.hasPassword}
+                full
+                onPress={() => this.requestUnlink()}
+              >
+                <Text>Unlink Google</Text>
+              </Button>
+            ) : (
+              <Button full onPress={() => this.requestLink()}>
+                <Text>Link Google</Text>
+              </Button>
+            )}
+          </View>
         </Content>
       </Container>
     );
@@ -143,7 +158,7 @@ class Profile extends Component {
 }
 
 const requestPasswordChange = (e, p) => {
-  return mutations.requestAccountCreation(e, p);
+  return mutations.requestPasswordChange(e, p);
 };
 
 const mapDispatchToProps = {
@@ -152,7 +167,7 @@ const mapDispatchToProps = {
 
 const mapStateToProps = ({ auth, data }) => ({
   auth: auth,
-  google: data.google,
+  Google: data.Google,
   hasPassword: data.hasPassword
 });
 
