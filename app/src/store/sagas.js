@@ -26,14 +26,14 @@ export function* authenticationSaga() {
 
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
-      // getting profile data (for profile page)
-      yield put({
-        type: mutations.REQUEST_USERDATA_FETCH
-      });
-
       // requesting people
       yield put({
         type: mutations.REQUEST_PEOPLE
+      });
+
+      // getting profile data (for profile page)
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
       });
 
       // request profile, etc.
@@ -58,14 +58,14 @@ export function* OTCAuthenticationSaga() {
 
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
-      // requesting people
-      yield put({
-        type: mutations.REQUEST_PEOPLE
-      });
-
       // getting profile data (for profile page)
       yield put({
         type: mutations.REQUEST_USERDATA_FETCH
+      });
+
+      // requesting people
+      yield put({
+        type: mutations.REQUEST_PEOPLE
       });
 
       NavigationService.navigate("Main");

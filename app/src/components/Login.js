@@ -31,6 +31,11 @@ class Login extends Component {
   }
 
   componentDidMount() {
+    this.setState({
+      email: "",
+      password: ""
+    });
+
     Linking.addEventListener("url", url => {
       this.handleAuthRedirect(url.url);
     });
