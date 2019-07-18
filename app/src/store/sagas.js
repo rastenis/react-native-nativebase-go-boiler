@@ -150,6 +150,19 @@ export function* peopleFetchSaga() {
   }
 }
 
+export function* unlinkOAuthSaga() {
+  while (true) {
+    yield take(mutations.REQUEST_AUTH_UNLINK);
+    try {
+      yield axios.post(`${url}/unlink/google`);
+      yield put(mutations.setData({ Google: false }));
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Couldn't unlink auth!");
+    }
+  }
+}
+
 export function* logoutSaga() {
   while (true) {
     yield take(mutations.REQUEST_LOGOUT);

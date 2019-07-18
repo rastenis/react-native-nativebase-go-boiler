@@ -37,6 +37,47 @@ class Profile extends Component {
     this.setState({ [name]: text });
   };
 
+  componentDidMount() {
+    Linking.addEventListener("url", url => {
+      this.handleAuthRedirect(url.url);
+    });
+  }
+
+  componentWillUnmount() {
+    // Remove event listener
+    Linking.removeEventListener("url", this.handleOpenURL);
+  }
+
+  handleAuthRedirect = url => {
+    let params = {};
+    url
+      .split("/--/?")[1]
+      .split("&")
+      .forEach(queryItem => {
+        let s = queryItem.split("=");
+        params[s[0]] = s[1];
+      });
+
+    console.log(
+      "Auth:",
+      params.provider,
+      "Status:",
+      params.success,
+      "OTC",
+      params.code
+    );
+
+    this.props.authenticateUserViaOTC(params.code);
+
+    return;
+  };
+
+  redirectToAuth = provider => {
+    WebBrowser.openBrowserAsync(
+      `${url}/auth/${provider}?redirectUrl=${Linking.makeUrl("/?")}`
+    );
+  };
+
   submitPasswordChange = () => {
     // clearing previous errors
     this.state.errors = [];
@@ -146,7 +187,11 @@ class Profile extends Component {
                 <Text>Unlink Google</Text>
               </Button>
             ) : (
-              <Button full onPress={() => this.requestLink()}>
+              <Button
+                full
+                light
+                onPress={this.redirectToAuth.bind(this, "google")}
+              >
                 <Text>Link Google</Text>
               </Button>
             )}
@@ -161,8 +206,13 @@ const requestPasswordChange = (e, p) => {
   return mutations.requestPasswordChange(e, p);
 };
 
+const requestOAuthUnlink = () => {
+  return mutations.requestAuthUnlink();
+};
+
 const mapDispatchToProps = {
-  requestPasswordChange
+  requestPasswordChange,
+  requestOAuthUnlink
 };
 
 const mapStateToProps = ({ auth, data }) => ({
