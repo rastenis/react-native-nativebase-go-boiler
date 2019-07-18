@@ -76,7 +76,7 @@ type otc struct {
 
 var store *sessions.CookieStore
 var googleOauthConfig *oauth2.Config
-var googleRandomState = "randomizethis123918230192830"
+var googleRandomState = RandStringRunes(30)
 
 const oauthGoogleURLAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
@@ -180,7 +180,7 @@ func main() {
 			log.Panicln(err)
 		}
 
-		log.Printf("Logging in user: %s", postedUserData.Email)
+		log.Printf("Logging in: %s", postedUserData.Email)
 		res.Header().Set("Content-Type", "application/json")
 
 		// fetching user
@@ -210,7 +210,7 @@ func main() {
 		// setting session data
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = u.ID
+		session.Values["id"] = u.ID.String()
 
 		if u.Password != "" {
 			session.Values["hasPassword"] = false
@@ -424,17 +424,16 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	decodeErrorUserWithToken := foundUserWithToken.Decode(&decodedFoundUserWithToken)
 
 	if decodeErrorUserWithToken == nil {
-		log.Println(session.Values["auth"])
 		if session.Values["auth"] != true || session.Values["auth"] == nil {
-			log.Println("Logging user in.")
+			log.Println("Logging user in via Google OAuth.")
 			session.Values["auth"] = true // now able to get users in the index page
 			session.Values["id"] = decodedFoundUserWithToken.ID.String()
 			session.Values["Google"] = true
 
-			if decodedFound.Password != "" {
-				session.Values["hasPassword"] = false
-			} else {
+			if decodedFoundUserWithToken.Password != "" {
 				session.Values["hasPassword"] = true
+			} else {
+				session.Values["hasPassword"] = false
 			}
 
 			err := sessions.Save(req, res)
@@ -476,7 +475,7 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 
 		// setting session values
 		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = decodedFoundUserWithToken.ID.String()
+		session.Values["id"] = creationResult.InsertedID.(string)
 		session.Values["Google"] = true
 		session.Values["hasPassword"] = false
 
