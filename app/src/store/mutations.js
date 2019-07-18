@@ -13,6 +13,7 @@ export const REQUEST_PEOPLE = `REQUEST_PEOPLE`;
 export const WAITING = `WAITING`;
 export const REQUEST_AUTH_UNLINK = `REQUEST_AUTH_UNLINK`;
 export const REQUEST_PASSWORD_CHANGE = `REQUEST_PASSWORD_CHANGE`;
+export const REQUEST_USERDATA_FETCH = `REQUEST_USERDATA_FETCH`;
 
 export const requestAuth = (email, password) => ({
   type: REQUEST_AUTH,

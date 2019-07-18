@@ -20,6 +20,9 @@ import {
 import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
 import { Alert } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import { Linking } from "expo";
+import { url } from "../../../config.json";
 
 class Profile extends Component {
   constructor(...args) {

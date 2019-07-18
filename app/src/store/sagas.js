@@ -27,7 +27,9 @@ export function* authenticationSaga() {
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
       // getting profile data (for profile page)
-      yield put(mutations.REQUEST_SESSION_FETCH);
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
+      });
 
       // requesting people
       yield put({
@@ -61,7 +63,11 @@ export function* OTCAuthenticationSaga() {
         type: mutations.REQUEST_PEOPLE
       });
 
-      // request profile, etc.
+      // getting profile data (for profile page)
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
+      });
+
       NavigationService.navigate("Main");
     } catch (e) {
       Alert.alert("Error", "Could not login via one time code.");
@@ -130,6 +136,27 @@ export function* sessionFetchSaga() {
           type: mutations.REQUEST_PEOPLE
         });
       }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Couldn't reach server!");
+    }
+  }
+}
+
+// minfied sessionFetchSaga, just for user data.
+export function* userDataFetchSaga() {
+  while (true) {
+    yield take(mutations.REQUEST_USERDATA_FETCH);
+    try {
+      const { data } = yield axios.get(`${url}/api/session`);
+
+      // setting user data
+      yield put(
+        mutations.setData({
+          Google: data.Google,
+          hasPassword: data.HasPassword
+        })
+      );
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "Couldn't reach server!");
