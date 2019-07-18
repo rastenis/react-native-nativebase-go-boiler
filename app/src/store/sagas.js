@@ -204,3 +204,22 @@ export function* logoutSaga() {
     }
   }
 }
+
+export function* passwordChangeSaga() {
+  while (true) {
+    const { oldPassword, newPassword } = yield take(
+      mutations.REQUEST_PASSWORD_CHANGE
+    );
+    try {
+      yield axios.post(`${url}/api/changePassword`, {
+        oldPassword,
+        newPassword
+      });
+      Alert.alert("Success!", "Password changed successfully!");
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", e.response.data.Msg);
+      yield put(mutations.processAuth(mutations.AUTH_ERROR));
+    }
+  }
+}
