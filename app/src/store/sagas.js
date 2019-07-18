@@ -40,6 +40,7 @@ export function* authenticationSaga() {
       NavigationService.navigate("Main");
     } catch (e) {
       console.log(e);
+      Alert.alert("Error", e.response.data.Msg || "Could not log in.");
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -70,7 +71,10 @@ export function* OTCAuthenticationSaga() {
 
       NavigationService.navigate("Main");
     } catch (e) {
-      Alert.alert("Error", "Could not login via one time code.");
+      Alert.alert(
+        "Error",
+        e.response.data.Msg || "Could not login via one time code."
+      );
       console.log(e);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
@@ -99,7 +103,7 @@ export function* registrationSaga() {
       NavigationService.navigate("Main");
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", e.response.data.Msg);
+      Alert.alert("Error", e.response.data.Msg || "Could not register.");
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }

@@ -203,7 +203,7 @@ func main() {
 		}
 
 		// checking password
-		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.Form.Get("password")))
+		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(postedUserData.Password))
 		if comparisonError != nil {
 			log.Println("Login failed. Wrong password.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
@@ -553,9 +553,6 @@ func changePassword(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Println(u.Password)
-	log.Println(postedPasswordChangeData.OldPassword)
-
 	// checking password
 	comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(postedPasswordChangeData.OldPassword))
 	if comparisonError != nil {
@@ -571,8 +568,9 @@ func changePassword(res http.ResponseWriter, req *http.Request) {
 	hashedConverted := string(hashed)
 
 	// inserting user
-	passwordChangeError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"password": hashedConverted}})
+	_, passwordChangeError := DB.Collection("users").UpdateOne(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"password": hashedConverted}})
 	if passwordChangeError != nil {
+		log.Println(passwordChangeError)
 		log.Println("Password change failed. Internal server error.")
 		response, _ := json.Marshal(Response{false, "Password change failed. Internal server error."})
 		res.WriteHeader(http.StatusInternalServerError)

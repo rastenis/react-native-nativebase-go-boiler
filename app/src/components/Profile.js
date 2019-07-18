@@ -61,15 +61,6 @@ class Profile extends Component {
         params[s[0]] = s[1];
       });
 
-    console.log(
-      "Auth:",
-      params.provider,
-      "Status:",
-      params.success,
-      "OTC",
-      params.code
-    );
-
     this.props.authenticateUserViaOTC(params.code);
 
     return;
