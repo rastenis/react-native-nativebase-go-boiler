@@ -37,6 +37,11 @@ type SessionData struct {
 	Google      bool
 }
 
+type passwordChangeData struct {
+	OldPassword string
+	NewPassword string
+}
+
 // Response : used for returning status data to user
 type Response struct {
 	Success bool
@@ -199,7 +204,7 @@ func main() {
 
 		// checking password
 		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(req.Form.Get("password")))
-		if comparisonError == nil {
+		if comparisonError != nil {
 			log.Println("Login failed. Wrong password.")
 			response, _ := json.Marshal(Response{false, "Invalid login details!"})
 			res.WriteHeader(http.StatusUnauthorized)
@@ -210,12 +215,12 @@ func main() {
 		// setting session data
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = u.ID.String()
+		session.Values["id"] = u.ID.Hex()
 
 		if u.Password != "" {
-			session.Values["hasPassword"] = false
-		} else {
 			session.Values["hasPassword"] = true
+		} else {
+			session.Values["hasPassword"] = false
 		}
 
 		if u.Google != nil {
@@ -278,7 +283,7 @@ func main() {
 		// setting session data
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = creationResult.InsertedID.(string)
+		session.Values["id"] = creationResult.InsertedID.(primitive.ObjectID).Hex()
 		session.Values["hasPassword"] = true
 		session.Values["Google"] = false
 
@@ -312,6 +317,8 @@ func main() {
 	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
 	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
 
+	router.HandleFunc("/api/changePassword", changePassword).Methods("POST")
+
 	log.Println("Listening on port " + os.Getenv("PORT"))
 	http.ListenAndServe(":"+os.Getenv("PORT"), router)
 }
@@ -334,9 +341,11 @@ func oauthGoogleUnlink(res http.ResponseWriter, req *http.Request) {
 	// setting session data
 	session, _ := store.Get(req, "boiler-session")
 
+	constructedUserID, _ := primitive.ObjectIDFromHex(session.Values["id"].(string))
+
 	if session.Values["Google"].(bool) {
 		ctx := context.Background()
-		unlinkError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": session.Values["id"].(string)}, bson.M{"$set": bson.M{"google": bson.TypeNull}})
+		unlinkError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"google": bson.TypeNull}})
 		if unlinkError != nil {
 			log.Panic(unlinkError)
 		}
@@ -516,4 +525,62 @@ func getUserDataFromGoogle(code string) (result oauthUserData, e error) {
 		return receivedGoogleData, fmt.Errorf("failed read response: %s", err.Error())
 	}
 	return receivedGoogleData, nil
+}
+
+func changePassword(res http.ResponseWriter, req *http.Request) {
+	// decoding passwordchange data
+	decoder := json.NewDecoder(req.Body)
+	var postedPasswordChangeData passwordChangeData
+	err := decoder.Decode(&postedPasswordChangeData)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	session, _ := store.Get(req, "boiler-session")
+
+	// fetching user
+	ctx := context.Background()
+	constructedUserID, _ := primitive.ObjectIDFromHex(session.Values["id"].(string))
+	foundUser := DB.Collection("users").FindOne(ctx, bson.M{"_id": constructedUserID})
+	var u user
+	decodeError := foundUser.Decode(&u)
+	if decodeError != nil {
+		log.Println(decodeError)
+		log.Println("Password change failed. No user.")
+		response, _ := json.Marshal(Response{false, "Invalid login details!"})
+		res.WriteHeader(http.StatusUnauthorized)
+		res.Write(response)
+		return
+	}
+
+	log.Println(u.Password)
+	log.Println(postedPasswordChangeData.OldPassword)
+
+	// checking password
+	comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(postedPasswordChangeData.OldPassword))
+	if comparisonError != nil {
+		log.Println("Password change failed. Incorrect old password.")
+		response, _ := json.Marshal(Response{false, "Wrong old password!"})
+		res.WriteHeader(http.StatusUnauthorized)
+		res.Write(response)
+		return
+	}
+
+	// hashing password
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(postedPasswordChangeData.NewPassword), 12)
+	hashedConverted := string(hashed)
+
+	// inserting user
+	passwordChangeError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"password": hashedConverted}})
+	if passwordChangeError != nil {
+		log.Println("Password change failed. Internal server error.")
+		response, _ := json.Marshal(Response{false, "Password change failed. Internal server error."})
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write(response)
+		return
+	}
+
+	response, _ := json.Marshal(Response{true, "Password successfully changed!"})
+	res.Write(response)
+	return
 }
