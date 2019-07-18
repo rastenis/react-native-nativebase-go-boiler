@@ -308,6 +308,7 @@ func main() {
 	})
 
 	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")
+	router.HandleFunc("/unlink/google", oauthGoogleUnlink).Methods("POST")
 	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
 	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
 
@@ -327,6 +328,29 @@ func oauthGoogleRedirect(res http.ResponseWriter, req *http.Request) {
 
 	url := googleOauthConfig.AuthCodeURL(googleRandomState + "|" + string(key))
 	http.Redirect(res, req, url, http.StatusTemporaryRedirect)
+}
+
+func oauthGoogleUnlink(res http.ResponseWriter, req *http.Request) {
+	// setting session data
+	session, _ := store.Get(req, "boiler-session")
+
+	if session.Values["Google"].(bool) {
+		ctx := context.Background()
+		unlinkError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": session.Values["id"].(string)}, bson.M{"$set": bson.M{"google": bson.TypeNull}})
+		if unlinkError != nil {
+			log.Panic(unlinkError)
+		}
+	}
+
+	session.Values["Google"] = false
+	err := sessions.Save(req, res)
+	if err != nil {
+		log.Printf("Error saving session: %v", err)
+	}
+	response, _ := json.Marshal(Response{true, "Successfully unlinked Google!"})
+	res.Write(response)
+	return
+
 }
 
 func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
