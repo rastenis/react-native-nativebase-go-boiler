@@ -12,7 +12,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "eject": "expo eject",
-    "server": "go run server/src/index.go"
+    "build:android": "expo build:android",
+    "build:ios": "expo build:android",
+    "server": "go run server/src/*.go"
   },
   "repository": {
     "type": "git",
