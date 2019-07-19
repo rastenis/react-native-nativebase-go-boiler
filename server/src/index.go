@@ -124,15 +124,15 @@ func main() {
 
 	// api routes
 	router.HandleFunc("/api/session", fetchSession).Methods("GET")
-	router.HandleFunc("/api/people", fetchPeople).Methods("GET")
-	router.HandleFunc("/api/auth", authorize).Methods("POST")
-	router.HandleFunc("/api/register", register).Methods("POST")
-	router.HandleFunc("/api/changePassword", changePassword).Methods("POST")
-	router.HandleFunc("/api/logout", logout).Methods("POST")
+	router.Handle("/api/people", onlyAuthorized(http.HandlerFunc(fetchPeople))).Methods("GET")
+	router.Handle("/api/auth", onlyUnauthorized(http.HandlerFunc(authorize))).Methods("POST")
+	router.Handle("/api/register", onlyUnauthorized(http.HandlerFunc(register))).Methods("POST")
+	router.Handle("/api/changePassword", onlyAuthorized(http.HandlerFunc(changePassword))).Methods("POST")
+	router.Handle("/api/logout", onlyAuthorized(http.HandlerFunc(logout))).Methods("POST")
 
 	// oauth management
 	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
-	router.HandleFunc("/api/google", oauthGoogleUnlink).Methods("DELETE")
+	router.Handle("/api/google", onlyAuthorized(http.HandlerFunc(oauthGoogleUnlink))).Methods("DELETE")
 
 	// oauth linking
 	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")

@@ -113,6 +113,8 @@ class Profile extends Component {
       this.state.oldPassword,
       this.state.newPassword
     );
+
+    this.clear();
   };
 
   render() {
