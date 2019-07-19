@@ -126,7 +126,6 @@ func main() {
 	router.HandleFunc("/api/people", func(res http.ResponseWriter, req *http.Request) {
 		// send back mock people
 		session, _ := store.Get(req, "boiler-session")
-		log.Println(session.Values["auth"])
 		authStatus, ok := session.Values["auth"].(bool)
 		if !ok || !authStatus {
 			log.Println("Couldnt cast session auth to bool. Unauthorized.")
@@ -186,7 +185,6 @@ func main() {
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
 		session.Values["id"] = u.ID.Hex()
-		log.Printf("ID IS %d", session.Values["id"])
 
 		if u.Password != "" {
 			session.Values["hasPassword"] = true
@@ -612,4 +610,27 @@ func changePassword(res http.ResponseWriter, req *http.Request) {
 	response, _ := json.Marshal(Response{true, "Password successfully changed!"})
 	res.Write(response)
 	return
+}
+
+func onlyUnauthorized(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		session, _ := store.Get(req, "boiler-session")
+		if session.Values["auth"] != nil && session.Values["auth"].(bool) == true {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		next.ServeHTTP(res, req)
+	})
+}
+
+func onlyAuthorized(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		session, _ := store.Get(req, "boiler-session")
+		if session.Values["auth"] == nil || session.Values["auth"].(bool) == false {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		next.ServeHTTP(res, req)
+	})
 }
