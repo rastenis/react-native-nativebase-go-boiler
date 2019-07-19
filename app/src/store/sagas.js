@@ -215,6 +215,7 @@ export function* unlinkOAuthSaga() {
       yield axios.delete(`${url}/api/${toUnlink}`);
       // this should be dynamic unlink, or just a userData fetch, if more OAuth providers are present
       yield put(mutations.setData({ Google: false }));
+      Alert.alert("Success", `You have unlinked your ${toUnlink} account!`);
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "Couldn't unlink auth!");

@@ -135,7 +135,7 @@ class Profile extends Component {
         <Content padder>
           {this.props.hasPassword ? (
             <Form>
-              <H2>Change Password</H2>
+              <H2 style={{ marginBottom: 20 }}>Change Password</H2>
               <Label htmlFor="oldPasswordField">Old Password</Label>
               <Item error={this.state.errors.includes("password")}>
                 <Input
@@ -181,23 +181,31 @@ class Profile extends Component {
               </Button>
             </Form>
           ) : null}
-          <View>
-            <H2>Manage linked accounts</H2>
-            {this.props.Google ? (
-              <Button
-                danger
-                disabled={!this.props.hasPassword}
-                full
-                onPress={() => this.requestOAuthUnlink("google")}
-              >
-                <Text>Unlink Google</Text>
-              </Button>
-            ) : (
-              <Button full light onPress={() => this.redirectToAuth("google")}>
-                <Text>Link Google</Text>
-              </Button>
-            )}
-          </View>
+          <H2 style={{ marginTop: 20 }}>Manage linked accounts</H2>
+          {this.props.Google ? (
+            <Button
+              type="button"
+              danger
+              disabled={!this.props.hasPassword}
+              full
+              rounded
+              style={{ marginTop: 10 }}
+              onPress={() => this.requestOAuthUnlink("google")}
+            >
+              <Text>Unlink Google</Text>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              full
+              light
+              rounded
+              style={{ marginTop: 10 }}
+              onPress={() => this.redirectToAuth("google")}
+            >
+              <Text>Link Google</Text>
+            </Button>
+          )}
         </Content>
       </Container>
     );
