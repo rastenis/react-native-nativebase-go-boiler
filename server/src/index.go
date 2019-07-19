@@ -345,7 +345,7 @@ func oauthGoogleUnlink(res http.ResponseWriter, req *http.Request) {
 
 	if session.Values["Google"].(bool) {
 		ctx := context.Background()
-		unlinkError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"google": bson.TypeNull}})
+		unlinkError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"Google": bson.TypeNull}})
 		if unlinkError != nil {
 			log.Panic(unlinkError)
 		}
@@ -463,7 +463,26 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 
 	if session.Values["auth"] == true {
 		// logged in. Attempting to link social account.
-		// linking...
+		ctx := context.Background()
+		constructedUserID, _ := primitive.ObjectIDFromHex(session.Values["id"].(string))
+
+		_, oauthLinkUpdateError := DB.Collection("users").UpdateOne(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"Google": bson.M{"id": data.ID, "accessToken": data.AccessToken}, "profile": bson.M{"name": data.Name, "picture": data.Picture}}})
+		if oauthLinkUpdateError != nil {
+			log.Println(oauthLinkUpdateError)
+			log.Println("OAuth link failed. Internal server error.")
+			response, _ := json.Marshal(Response{false, "OAuth link failed. Internal server error."})
+			res.WriteHeader(http.StatusInternalServerError)
+			res.Write(response)
+			return
+		}
+		// sending a success response
+		response, err := json.Marshal(Response{true, "Successfully linked!"})
+		if err != nil {
+			log.Println("Could not marshal response")
+		}
+		res.Write(response)
+		return
+
 	} else {
 		// creating a new user if email is not taken...
 		if decodeError == nil {
