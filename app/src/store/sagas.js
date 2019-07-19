@@ -122,6 +122,11 @@ export function* registrationSaga() {
         })
       );
 
+      // requesting people
+      yield put({
+        type: mutations.REQUEST_PEOPLE
+      });
+
       NavigationService.navigate("Main");
     } catch (e) {
       console.error(e);

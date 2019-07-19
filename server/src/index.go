@@ -428,12 +428,12 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 	var decodedFound user
 	decodeError = foundUser.Decode(&decodedFound)
 
-	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"google.id": data.ID})
+	foundUserWithToken := DB.Collection("users").FindOne(ctx, bson.M{"Google.id": data.ID})
 	var decodedFoundUserWithToken user
 	decodeErrorUserWithToken := foundUserWithToken.Decode(&decodedFoundUserWithToken)
 
 	if decodeErrorUserWithToken == nil {
-		if session.Values["auth"] != true || session.Values["auth"] == nil {
+		if session.Values["auth"] != true {
 			log.Println("Logging user in via Google OAuth.")
 			session.Values["auth"] = true // now able to get users in the index page
 			session.Values["id"] = decodedFoundUserWithToken.ID.String()
@@ -483,42 +483,42 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 		res.Write(response)
 		return
 
-	} else {
-		// creating a new user if email is not taken...
-		if decodeError == nil {
-			log.Println("There is already an account associated with this email address.")
-			response, _ := json.Marshal(Response{false, "There is already an account associated with this email address."})
-			res.WriteHeader(http.StatusBadRequest)
-			res.Write(response)
-			return
-		}
-
-		// creating user...
-		creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": data.Email, "Google": bson.M{"id": data.ID, "accessToken": data.AccessToken}, "profile": bson.M{"name": data.Name, "picture": data.Picture}})
-		log.Println(creationResult)
-
-		if creationError != nil {
-			log.Printf("Could not create new account. %s", creationError)
-		}
-
-		// setting session values
-		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = creationResult.InsertedID.(string)
-		session.Values["Google"] = true
-		session.Values["hasPassword"] = false
-
-		err := sessions.Save(req, res)
-		if err != nil {
-			log.Printf("Error saving session: %v", err)
-		}
-
-		// sending a success response
-		response, err := json.Marshal(Response{true, "Successfully logged in!"})
-		if err != nil {
-			log.Println("Could not marshal response")
-		}
-		res.Write(response)
 	}
+
+	// creating a new user if email is not taken...
+	if decodeError == nil {
+		log.Println("There is already an account associated with this email address.")
+		response, _ := json.Marshal(Response{false, "There is already an account associated with this email address."})
+		res.WriteHeader(http.StatusBadRequest)
+		res.Write(response)
+		return
+	}
+
+	// creating user...
+	creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": data.Email, "Google": bson.M{"id": data.ID, "accessToken": data.AccessToken}, "profile": bson.M{"name": data.Name, "picture": data.Picture}})
+	log.Println(creationResult)
+
+	if creationError != nil {
+		log.Printf("Could not create new account. %s", creationError)
+	}
+
+	// setting session values
+	session.Values["auth"] = true // now able to get users in the index page
+	session.Values["id"] = creationResult.InsertedID.(primitive.ObjectID).Hex()
+	session.Values["Google"] = true
+	session.Values["hasPassword"] = false
+
+	err = sessions.Save(req, res)
+	if err != nil {
+		log.Printf("Error saving session: %v", err)
+	}
+
+	// sending a success response
+	response, err := json.Marshal(Response{true, "Successfully logged in!"})
+	if err != nil {
+		log.Println("Could not marshal response")
+	}
+	res.Write(response)
 }
 
 func getUserDataFromGoogle(code string) (result oauthUserData, e error) {
