@@ -69,8 +69,8 @@ class Profile extends Component {
         params[s[0]] = s[1];
       });
 
-    this.props.authenticateUserViaOTC(params.code);
-
+    // not required to pass type here, because OAuth data is saved behind OTC anyway
+    this.props.requestOAuthLink(params.code);
     return;
   };
 
@@ -212,9 +212,14 @@ const requestOAuthUnlink = () => {
   return mutations.requestAuthUnlink();
 };
 
+const requestOAuthLink = type => {
+  return mutations.requestAuthLink(type);
+};
+
 const mapDispatchToProps = {
   requestPasswordChange,
-  requestOAuthUnlink
+  requestOAuthUnlink,
+  requestOAuthLink
 };
 
 const mapStateToProps = ({ auth, data }) => ({

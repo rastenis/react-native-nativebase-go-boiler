@@ -81,6 +81,28 @@ export function* OTCAuthenticationSaga() {
   }
 }
 
+export function* OTCLinkSaga() {
+  while (true) {
+    const { code } = yield take(mutations.REQUEST_AUTH_LINK);
+    try {
+      yield axios.post(`${url}/api/authOTC`, {
+        code
+      });
+
+      // getting profile data (for profile page)
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
+      });
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e.response.data.Msg || "Could not link account via one time code."
+      );
+      console.log(e);
+    }
+  }
+}
+
 export function* registrationSaga() {
   while (true) {
     const { email, password } = yield take(mutations.REQUEST_ACCOUNT_CREATION);
@@ -183,9 +205,9 @@ export function* peopleFetchSaga() {
 
 export function* unlinkOAuthSaga() {
   while (true) {
-    yield take(mutations.REQUEST_AUTH_UNLINK);
+    const { type } = yield take(mutations.REQUEST_AUTH_UNLINK);
     try {
-      yield axios.post(`${url}/unlink/google`);
+      yield axios.post(`${url}/unlink/${type}`);
       yield put(mutations.setData({ Google: false }));
     } catch (e) {
       console.error(e);
