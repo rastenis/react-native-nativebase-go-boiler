@@ -106,7 +106,6 @@ func init() {
 		MaxAge:   3600 * 8, // 8 hours
 		HttpOnly: true,
 	}
-
 }
 
 func main() {
@@ -123,180 +122,185 @@ func main() {
 		fmt.Fprint(res, "This is the index page.")
 	})
 
-	router.HandleFunc("/api/people", func(res http.ResponseWriter, req *http.Request) {
-		// send back mock people
-		session, _ := store.Get(req, "boiler-session")
-		authStatus, ok := session.Values["auth"].(bool)
-		if !ok || !authStatus {
-			log.Println("Couldnt cast session auth to bool. Unauthorized.")
-			res.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		ppl := people{[]Person{{"Jack Hill", 421}, {"Jack Wright", 212}}}
-
-		js, err := json.Marshal(ppl)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		res.Header().Set("Content-Type", "application/json")
-		res.Write(js)
-	})
-
-	router.HandleFunc("/api/auth", func(res http.ResponseWriter, req *http.Request) {
-		// decoding userdata
-		decoder := json.NewDecoder(req.Body)
-		var postedUserData user
-		err := decoder.Decode(&postedUserData)
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		log.Printf("Logging in: %s", postedUserData.Email)
-		res.Header().Set("Content-Type", "application/json")
-
-		// fetching user
-		ctx := context.Background()
-		foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": postedUserData.Email})
-		var u user
-		decodeError := foundUser.Decode(&u)
-		if decodeError != nil {
-			log.Println(decodeError)
-			log.Println("Login failed. No user.")
-			response, _ := json.Marshal(Response{false, "Invalid login details!"})
-			res.WriteHeader(http.StatusUnauthorized)
-			res.Write(response)
-			return
-		}
-
-		// checking password
-		comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(postedUserData.Password))
-		if comparisonError != nil {
-			log.Println("Login failed. Wrong password.")
-			response, _ := json.Marshal(Response{false, "Invalid login details!"})
-			res.WriteHeader(http.StatusUnauthorized)
-			res.Write(response)
-			return
-		}
-
-		// setting session data
-		session, _ := store.Get(req, "boiler-session")
-		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = u.ID.Hex()
-
-		if u.Password != "" {
-			session.Values["hasPassword"] = true
-		} else {
-			session.Values["hasPassword"] = false
-		}
-
-		if u.Google != nil {
-			session.Values["Google"] = true
-		} else {
-			session.Values["Google"] = false
-		}
-
-		if err = sessions.Save(req, res); err != nil {
-			log.Printf("Error saving session: %v", err)
-		}
-
-		// sending a success response
-		response, err := json.Marshal(Response{true, "Successfully logged in!"})
-		if err != nil {
-			log.Println("Could not marshal response")
-		}
-		res.Write(response)
-	})
-
-	router.HandleFunc("/api/register", func(res http.ResponseWriter, req *http.Request) {
-		// decoding userdata
-		decoder := json.NewDecoder(req.Body)
-		var postedUserData user
-		err := decoder.Decode(&postedUserData)
-		if err != nil {
-			log.Panicln(err)
-		}
-
-		log.Printf("Registering user: %s", postedUserData.Email)
-
-		res.Header().Set("Content-Type", "application/json")
-
-		// checking for duplicates
-		ctx := context.Background()
-		foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": postedUserData.Email})
-		var dupe user
-		decodeError := foundUser.Decode(&dupe)
-		if decodeError == nil {
-			log.Println("Registration failed. Duplicate user.")
-			response, _ := json.Marshal(Response{false, "An user with that email already exists!"})
-			res.WriteHeader(http.StatusBadRequest)
-			res.Write(response)
-			return
-		}
-
-		// hashing password
-		hashed, _ := bcrypt.GenerateFromPassword([]byte(postedUserData.Password), 12)
-		hashedConverted := string(hashed)
-
-		// inserting user
-		creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": postedUserData.Email, "password": hashedConverted})
-		log.Println(creationResult)
-		if creationError != nil {
-			log.Panicln(creationError)
-		}
-
-		log.Println("Registration successful.")
-
-		// setting session data
-		session, _ := store.Get(req, "boiler-session")
-		session.Values["auth"] = true // now able to get users in the index page
-		session.Values["id"] = creationResult.InsertedID.(primitive.ObjectID).Hex()
-		session.Values["hasPassword"] = true
-		session.Values["Google"] = false
-
-		if err = sessions.Save(req, res); err != nil {
-			log.Printf("Error saving session: %v", err)
-		}
-
-		// sending a success response
-		response, err := json.Marshal(Response{true, "Successfully registered!"})
-		if err != nil {
-			log.Println("Could not marshal response")
-		}
-		res.Write(response)
-	})
-
-	router.HandleFunc("/api/logout", func(res http.ResponseWriter, req *http.Request) {
-
-		// deleting session
-		session, _ := store.Get(req, "boiler-session")
-		session.Options.MaxAge = -1
-		err := session.Save(req, res)
-		if err != nil {
-			log.Fatal("failed to delete session", err)
-		}
-
-		res.WriteHeader(http.StatusOK)
-	})
-
+	// api routes
 	router.HandleFunc("/api/session", fetchSession).Methods("GET")
-
-	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")
-	router.HandleFunc("/api/google", oauthGoogleUnlink).Methods("DELETE")
-	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
-	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
-
+	router.HandleFunc("/api/people", fetchPeople).Methods("GET")
+	router.HandleFunc("/api/auth", authorize).Methods("POST")
+	router.HandleFunc("/api/register", register).Methods("POST")
 	router.HandleFunc("/api/changePassword", changePassword).Methods("POST")
+	router.HandleFunc("/api/logout", logout).Methods("POST")
+
+	// oauth management
+	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
+	router.HandleFunc("/api/google", oauthGoogleUnlink).Methods("DELETE")
+
+	// oauth linking
+	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")
+	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
 
 	log.Println("Listening on port " + os.Getenv("PORT"))
 	http.ListenAndServe(":"+os.Getenv("PORT"), router)
 }
 
-func fetchSession(res http.ResponseWriter, req *http.Request) {
-	fmt.Println("Retreiving session...")
+func logout(res http.ResponseWriter, req *http.Request) {
 
+	// deleting session
+	session, _ := store.Get(req, "boiler-session")
+	session.Options.MaxAge = -1
+	err := session.Save(req, res)
+	if err != nil {
+		log.Fatal("failed to delete session", err)
+	}
+
+	res.WriteHeader(http.StatusOK)
+}
+
+func register(res http.ResponseWriter, req *http.Request) {
+	// decoding userdata
+	decoder := json.NewDecoder(req.Body)
+	var postedUserData user
+	err := decoder.Decode(&postedUserData)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	log.Printf("Registering user: %s", postedUserData.Email)
+
+	res.Header().Set("Content-Type", "application/json")
+
+	// checking for duplicates
+	ctx := context.Background()
+	foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": postedUserData.Email})
+	var dupe user
+	decodeError := foundUser.Decode(&dupe)
+	if decodeError == nil {
+		log.Println("Registration failed. Duplicate user.")
+		response, _ := json.Marshal(Response{false, "An user with that email already exists!"})
+		res.WriteHeader(http.StatusBadRequest)
+		res.Write(response)
+		return
+	}
+
+	// hashing password
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(postedUserData.Password), 12)
+	hashedConverted := string(hashed)
+
+	// inserting user
+	creationResult, creationError := DB.Collection("users").InsertOne(ctx, bson.M{"email": postedUserData.Email, "password": hashedConverted})
+	log.Println(creationResult)
+	if creationError != nil {
+		log.Panicln(creationError)
+	}
+
+	log.Println("Registration successful.")
+
+	// setting session data
+	session, _ := store.Get(req, "boiler-session")
+	session.Values["auth"] = true // now able to get users in the index page
+	session.Values["id"] = creationResult.InsertedID.(primitive.ObjectID).Hex()
+	session.Values["hasPassword"] = true
+	session.Values["Google"] = false
+
+	if err = sessions.Save(req, res); err != nil {
+		log.Printf("Error saving session: %v", err)
+	}
+
+	// sending a success response
+	response, err := json.Marshal(Response{true, "Successfully registered!"})
+	if err != nil {
+		log.Println("Could not marshal response")
+	}
+	res.Write(response)
+}
+
+func authorize(res http.ResponseWriter, req *http.Request) {
+	// decoding userdata
+	decoder := json.NewDecoder(req.Body)
+	var postedUserData user
+	err := decoder.Decode(&postedUserData)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	log.Printf("Logging in: %s", postedUserData.Email)
+	res.Header().Set("Content-Type", "application/json")
+
+	// fetching user
+	ctx := context.Background()
+	foundUser := DB.Collection("users").FindOne(ctx, bson.M{"email": postedUserData.Email})
+	var u user
+	decodeError := foundUser.Decode(&u)
+	if decodeError != nil {
+		log.Println(decodeError)
+		log.Println("Login failed. No user.")
+		response, _ := json.Marshal(Response{false, "Invalid login details!"})
+		res.WriteHeader(http.StatusUnauthorized)
+		res.Write(response)
+		return
+	}
+
+	// checking password
+	comparisonError := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(postedUserData.Password))
+	if comparisonError != nil {
+		log.Println("Login failed. Wrong password.")
+		response, _ := json.Marshal(Response{false, "Invalid login details!"})
+		res.WriteHeader(http.StatusUnauthorized)
+		res.Write(response)
+		return
+	}
+
+	// setting session data
+	session, _ := store.Get(req, "boiler-session")
+	session.Values["auth"] = true // now able to get users in the index page
+	session.Values["id"] = u.ID.Hex()
+
+	if u.Password != "" {
+		session.Values["hasPassword"] = true
+	} else {
+		session.Values["hasPassword"] = false
+	}
+
+	if u.Google != nil {
+		session.Values["Google"] = true
+	} else {
+		session.Values["Google"] = false
+	}
+
+	if err = sessions.Save(req, res); err != nil {
+		log.Printf("Error saving session: %v", err)
+	}
+
+	// sending a success response
+	response, err := json.Marshal(Response{true, "Successfully logged in!"})
+	if err != nil {
+		log.Println("Could not marshal response")
+	}
+	res.Write(response)
+}
+
+func fetchPeople(res http.ResponseWriter, req *http.Request) {
+	// send back mock people
+	session, _ := store.Get(req, "boiler-session")
+	authStatus, ok := session.Values["auth"].(bool)
+	if !ok || !authStatus {
+		log.Println("Couldnt cast session auth to bool. Unauthorized.")
+		res.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	ppl := people{[]Person{{"Jack Hill", 421}, {"Jack Wright", 212}}}
+
+	js, err := json.Marshal(ppl)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.Write(js)
+}
+
+func fetchSession(res http.ResponseWriter, req *http.Request) {
 	// send back the session data
 	session, _ := store.Get(req, "boiler-session")
 	authStatus, ok := session.Values["auth"].(bool)
