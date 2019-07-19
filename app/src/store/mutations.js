@@ -12,7 +12,9 @@ export const REQUEST_LOGOUT = `REQUEST_LOGOUT`;
 export const REQUEST_PEOPLE = `REQUEST_PEOPLE`;
 export const WAITING = `WAITING`;
 export const REQUEST_AUTH_UNLINK = `REQUEST_AUTH_UNLINK`;
+export const REQUEST_AUTH_LINK = `REQUEST_AUTH_LINK`;
 export const REQUEST_PASSWORD_CHANGE = `REQUEST_PASSWORD_CHANGE`;
+export const REQUEST_USERDATA_FETCH = `REQUEST_USERDATA_FETCH`;
 
 export const requestAuth = (email, password) => ({
   type: REQUEST_AUTH,
@@ -58,4 +60,9 @@ export const requestPasswordChange = (oldPassword, newPassword) => ({
 export const requestAuthUnlink = toUnlink => ({
   type: REQUEST_AUTH_UNLINK,
   toUnlink
+});
+
+export const requestAuthLink = code => ({
+  type: REQUEST_AUTH_LINK,
+  code
 });

@@ -2,7 +2,7 @@ import { combineReducers } from "redux";
 import * as mutations from "./mutations";
 
 let defaultState = {
-  data: { people: mutations.WAITING },
+  data: { people: mutations.WAITING, hasPassword: null, google: null },
   auth: mutations.WAITING
 };
 

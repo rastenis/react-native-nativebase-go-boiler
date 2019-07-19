@@ -1,5 +1,6 @@
 import React from "react";
-import { Container, Content, Text, List, ListItem, Button } from "native-base";
+import { FlatList } from "react-native";
+import { Container, Content, Text, ListItem, Button } from "native-base";
 import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
 
@@ -13,15 +14,16 @@ class SideBar extends React.Component {
     return (
       <Container>
         <Content>
-          <List
-            dataArray={routes}
-            renderRow={data => {
+          <FlatList
+            data={routes}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => {
               return (
                 <ListItem
                   button
-                  onPress={() => this.props.navigation.navigate(data)}
+                  onPress={() => this.props.navigation.navigate(item)}
                 >
-                  <Text>{data}</Text>
+                  <Text>{item}</Text>
                 </ListItem>
               );
             }}

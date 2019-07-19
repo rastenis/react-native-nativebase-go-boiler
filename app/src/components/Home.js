@@ -8,8 +8,8 @@ import {
   Body,
   Content,
   Text,
-  Card,
-  CardItem
+  H2,
+  View
 } from "native-base";
 import { connect } from "react-redux";
 import * as mutations from "../store/mutations";
@@ -31,13 +31,10 @@ class Home extends React.Component {
           <Right />
         </Header>
         <Content padder>
-          <Card>
-            <CardItem>
-              <Body>
-                <Text>Log in to see user data.</Text>
-              </Body>
-            </CardItem>
-          </Card>
+          <View>
+            <H2>Welcome!</H2>
+            <Text>Log in to see people list.</Text>
+          </View>
           <Button
             full
             rounded

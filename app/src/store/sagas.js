@@ -6,10 +6,11 @@ import NavigationService from "../components/NavigationService";
 import { fetchSession, storeSession } from "./localStorage";
 import { url } from "../../../config.json";
 
-axios.interceptors.request.use(request => {
-  console.log("Starting Request", request);
-  return request;
-});
+// use this as a lightweight way to inspect outgoing requests.
+// axios.interceptors.request.use(request => {
+//   console.log("Starting Request", request);
+//   return request;
+// });
 
 export function* authenticationSaga() {
   while (true) {
@@ -30,10 +31,16 @@ export function* authenticationSaga() {
         type: mutations.REQUEST_PEOPLE
       });
 
+      // getting profile data (for profile page)
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
+      });
+
       // request profile, etc.
       NavigationService.navigate("Main");
     } catch (e) {
       console.log(e);
+      Alert.alert("Error", e.response.data.Msg || "Could not log in.");
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -52,17 +59,46 @@ export function* OTCAuthenticationSaga() {
 
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
+      // getting profile data (for profile page)
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
+      });
+
       // requesting people
       yield put({
         type: mutations.REQUEST_PEOPLE
       });
 
-      // request profile, etc.
       NavigationService.navigate("Main");
     } catch (e) {
-      console.log("Could not login via one time code.");
+      Alert.alert(
+        "Error",
+        e.response.data.Msg || "Could not login via one time code."
+      );
       console.log(e);
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
+    }
+  }
+}
+
+export function* OTCLinkSaga() {
+  while (true) {
+    const { code } = yield take(mutations.REQUEST_AUTH_LINK);
+    try {
+      yield axios.post(`${url}/api/authOTC`, {
+        code
+      });
+
+      // getting profile data (for profile page)
+      yield put({
+        type: mutations.REQUEST_USERDATA_FETCH
+      });
+    } catch (e) {
+      Alert.alert(
+        "Error",
+        e.response.data.Msg || "Could not link account via one time code."
+      );
+      console.log(e);
     }
   }
 }
@@ -77,10 +113,24 @@ export function* registrationSaga() {
       });
       yield put(mutations.processAuth(mutations.AUTHENTICATED));
 
+      // no need to fetch full session data, because accounts created via /api/register are always password based and never have oauth tokens.
+      // setting default value
+      yield put(
+        mutations.setData({
+          Google: false,
+          hasPassword: true
+        })
+      );
+
+      // requesting people
+      yield put({
+        type: mutations.REQUEST_PEOPLE
+      });
+
       NavigationService.navigate("Main");
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", e.response.data.Msg);
+      Alert.alert("Error", e.response.data.Msg || "Could not register.");
       yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
@@ -104,11 +154,40 @@ export function* sessionFetchSaga() {
         mutations.processAuth(data.Auth ? mutations.AUTHENTICATED : null)
       );
 
+      // setting user data
+      yield put(
+        mutations.setData({
+          Google: data.Google,
+          hasPassword: data.HasPassword
+        })
+      );
+
       if (data.Auth) {
         yield put({
           type: mutations.REQUEST_PEOPLE
         });
       }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Couldn't reach server!");
+    }
+  }
+}
+
+// minfied sessionFetchSaga, just for user data.
+export function* userDataFetchSaga() {
+  while (true) {
+    yield take(mutations.REQUEST_USERDATA_FETCH);
+    try {
+      const { data } = yield axios.get(`${url}/api/session`);
+
+      // setting user data
+      yield put(
+        mutations.setData({
+          Google: data.Google,
+          hasPassword: data.HasPassword
+        })
+      );
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "Couldn't reach server!");
@@ -129,6 +208,21 @@ export function* peopleFetchSaga() {
   }
 }
 
+export function* unlinkOAuthSaga() {
+  while (true) {
+    const { toUnlink } = yield take(mutations.REQUEST_AUTH_UNLINK);
+    try {
+      yield axios.delete(`${url}/api/${toUnlink}`);
+      // this should be dynamic unlink, or just a userData fetch, if more OAuth providers are present
+      yield put(mutations.setData({ Google: false }));
+      Alert.alert("Success", `You have unlinked your ${toUnlink} account!`);
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Couldn't unlink auth!");
+    }
+  }
+}
+
 export function* logoutSaga() {
   while (true) {
     yield take(mutations.REQUEST_LOGOUT);
@@ -140,6 +234,25 @@ export function* logoutSaga() {
     } catch (e) {
       console.log(e);
       Alert.alert("Error", "Couldn't log out!");
+    }
+  }
+}
+
+export function* passwordChangeSaga() {
+  while (true) {
+    const { oldPassword, newPassword } = yield take(
+      mutations.REQUEST_PASSWORD_CHANGE
+    );
+    try {
+      yield axios.post(`${url}/api/changePassword`, {
+        oldPassword,
+        newPassword
+      });
+      Alert.alert("Success!", "Password changed successfully!");
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", e.response.data.Msg);
+      yield put(mutations.processAuth(mutations.AUTH_ERROR));
     }
   }
 }

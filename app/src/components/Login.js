@@ -20,20 +20,21 @@ import * as WebBrowser from "expo-web-browser";
 import { Linking } from "expo";
 import { url } from "../../../config.json";
 
+const initialState = { email: "", password: "" };
+
 class Login extends Component {
   constructor(...args) {
     super(...args);
 
-    this.state = {
-      email: "",
-      password: ""
-    };
+    this.state = initialState;
   }
 
   componentDidMount() {
     Linking.addEventListener("url", url => {
       this.handleAuthRedirect(url.url);
     });
+    this.clear();
+    this.props.navigation.addListener("willFocus", this.clear);
   }
 
   componentWillUnmount() {
@@ -50,15 +51,6 @@ class Login extends Component {
         let s = queryItem.split("=");
         params[s[0]] = s[1];
       });
-
-    console.log(
-      "Auth:",
-      params.provider,
-      "Status:",
-      params.success,
-      "OTC",
-      params.code
-    );
 
     this.props.authenticateUserViaOTC(params.code);
 
@@ -77,6 +69,10 @@ class Login extends Component {
 
   submitLogin = () => {
     this.props.authenticateUser(this.state.email, this.state.password);
+  };
+
+  clear = () => {
+    this.setState(initialState);
   };
 
   render() {
