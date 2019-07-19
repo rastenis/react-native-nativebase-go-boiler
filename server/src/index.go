@@ -123,36 +123,6 @@ func main() {
 		fmt.Fprint(res, "This is the index page.")
 	})
 
-	router.HandleFunc("/api/session", func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("Retreiving session...")
-
-		// send back the session data
-		session, _ := store.Get(req, "boiler-session")
-		authStatus, ok := session.Values["auth"].(bool)
-		if !ok {
-			authStatus = false
-		}
-
-		// checking for nil values
-		if session.Values["hasPassword"] == nil {
-			session.Values["hasPassword"] = false
-		}
-
-		if session.Values["Google"] == nil {
-			session.Values["Google"] = false
-		}
-
-		sessionData := SessionData{authStatus, session.Values["hasPassword"].(bool), session.Values["Google"].(bool)}
-		js, err := json.Marshal(sessionData)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		res.Header().Set("Content-Type", "application/json")
-		res.Write(js)
-	})
-
 	router.HandleFunc("/api/people", func(res http.ResponseWriter, req *http.Request) {
 		// send back mock people
 		session, _ := store.Get(req, "boiler-session")
@@ -216,6 +186,7 @@ func main() {
 		session, _ := store.Get(req, "boiler-session")
 		session.Values["auth"] = true // now able to get users in the index page
 		session.Values["id"] = u.ID.Hex()
+		log.Printf("ID IS %d", session.Values["id"])
 
 		if u.Password != "" {
 			session.Values["hasPassword"] = true
@@ -312,8 +283,10 @@ func main() {
 		res.WriteHeader(http.StatusOK)
 	})
 
+	router.HandleFunc("/api/session", fetchSession).Methods("GET")
+
 	router.HandleFunc("/auth/google", oauthGoogleRedirect).Methods("GET")
-	router.HandleFunc("/unlink/google", oauthGoogleUnlink).Methods("POST")
+	router.HandleFunc("/api/google", oauthGoogleUnlink).Methods("DELETE")
 	router.HandleFunc("/callback/google", oauthGoogleCallback).Methods("GET")
 	router.HandleFunc("/api/authOTC", oauthLink).Methods("POST")
 
@@ -321,6 +294,36 @@ func main() {
 
 	log.Println("Listening on port " + os.Getenv("PORT"))
 	http.ListenAndServe(":"+os.Getenv("PORT"), router)
+}
+
+func fetchSession(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("Retreiving session...")
+
+	// send back the session data
+	session, _ := store.Get(req, "boiler-session")
+	authStatus, ok := session.Values["auth"].(bool)
+	if !ok {
+		authStatus = false
+	}
+
+	// checking for nil values
+	if session.Values["hasPassword"] == nil {
+		session.Values["hasPassword"] = false
+	}
+
+	if session.Values["Google"] == nil {
+		session.Values["Google"] = false
+	}
+
+	sessionData := SessionData{authStatus, session.Values["hasPassword"].(bool), session.Values["Google"].(bool)}
+	js, err := json.Marshal(sessionData)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.Write(js)
 }
 
 func oauthGoogleRedirect(res http.ResponseWriter, req *http.Request) {
@@ -343,12 +346,15 @@ func oauthGoogleUnlink(res http.ResponseWriter, req *http.Request) {
 
 	constructedUserID, _ := primitive.ObjectIDFromHex(session.Values["id"].(string))
 
-	if session.Values["Google"].(bool) {
-		ctx := context.Background()
-		unlinkError := DB.Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"Google": bson.TypeNull}})
-		if unlinkError != nil {
-			log.Panic(unlinkError)
-		}
+	if !session.Values["Google"].(bool) {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+	_, unlinkError := DB.Collection("users").UpdateOne(ctx, bson.M{"_id": constructedUserID}, bson.M{"$set": bson.M{"Google": bson.M{}}})
+	if unlinkError != nil {
+		log.Println(unlinkError)
 	}
 
 	session.Values["Google"] = false
@@ -359,7 +365,6 @@ func oauthGoogleUnlink(res http.ResponseWriter, req *http.Request) {
 	response, _ := json.Marshal(Response{true, "Successfully unlinked Google!"})
 	res.Write(response)
 	return
-
 }
 
 func oauthGoogleCallback(res http.ResponseWriter, req *http.Request) {
@@ -475,6 +480,13 @@ func oauthLink(res http.ResponseWriter, req *http.Request) {
 			res.Write(response)
 			return
 		}
+
+		session.Values["Google"] = true
+		err = sessions.Save(req, res)
+		if err != nil {
+			log.Printf("Error saving session: %v", err)
+		}
+
 		// sending a success response
 		response, err := json.Marshal(Response{true, "Successfully linked!"})
 		if err != nil {

@@ -59,6 +59,10 @@ class Profile extends Component {
     Linking.removeEventListener("url", this.handleOpenURL);
   }
 
+  requestOAuthUnlink = toUnlink => {
+    this.props.requestOAuthUnlink(toUnlink);
+  };
+
   handleAuthRedirect = url => {
     let params = {};
     url
@@ -184,16 +188,12 @@ class Profile extends Component {
                 danger
                 disabled={!this.props.hasPassword}
                 full
-                onPress={() => this.requestUnlink()}
+                onPress={() => this.requestOAuthUnlink("google")}
               >
                 <Text>Unlink Google</Text>
               </Button>
             ) : (
-              <Button
-                full
-                light
-                onPress={this.redirectToAuth.bind(this, "google")}
-              >
+              <Button full light onPress={() => this.redirectToAuth("google")}>
                 <Text>Link Google</Text>
               </Button>
             )}
@@ -208,8 +208,8 @@ const requestPasswordChange = (e, p) => {
   return mutations.requestPasswordChange(e, p);
 };
 
-const requestOAuthUnlink = () => {
-  return mutations.requestAuthUnlink();
+const requestOAuthUnlink = toUnlink => {
+  return mutations.requestAuthUnlink(toUnlink);
 };
 
 const requestOAuthLink = type => {

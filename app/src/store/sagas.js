@@ -210,9 +210,10 @@ export function* peopleFetchSaga() {
 
 export function* unlinkOAuthSaga() {
   while (true) {
-    const { type } = yield take(mutations.REQUEST_AUTH_UNLINK);
+    const { toUnlink } = yield take(mutations.REQUEST_AUTH_UNLINK);
     try {
-      yield axios.post(`${url}/unlink/${type}`);
+      yield axios.delete(`${url}/api/${toUnlink}`);
+      // this should be dynamic unlink, or just a userData fetch, if more OAuth providers are present
       yield put(mutations.setData({ Google: false }));
     } catch (e) {
       console.error(e);
