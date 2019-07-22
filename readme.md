@@ -4,7 +4,7 @@
 
 > A React-Native/Redux/Native-Base/Go full stack boilerplate for building Android and IOS apps.
 
-Demo can be viewed [here.](#)
+Demo can be viewed ~~[here.](#)~~
 
 ## Features
 
