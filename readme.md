@@ -1,5 +1,7 @@
 # react-native-nativebase-go-boiler
 
+[![Status](https://travis-ci.org/scharkee/react-native-nativebase-go-boiler.svg?branch=master)](https://travis-ci.org/scharkee/react-native-nativebase-go-boiler)
+
 > A React-Native/Redux/Native-Base/Go full stack boilerplate for building Android and IOS apps.
 
 Demo can be viewed [here.](#)
@@ -14,7 +16,6 @@ Demo can be viewed [here.](#)
 - [WIP] Guided setup
 - [WIP] Tests
 
-
 ## Usage
 
 ```bash
@@ -23,10 +24,12 @@ $ npm install
 
 # build and serve to emulator/device with hot reload
 $ npm run android
-or 
+or
 $ npm run ios
 ```
+
 ## Building standalone apps
+
 ```bash
 # login to Expo
 $ expo login username password
@@ -42,7 +45,7 @@ $ npm build:ios
 
 ### Unguided key setup
 
-* The process for obtaining a Google key is described [here](https://developers.google.com/identity/protocols/OAuth2).
+- The process for obtaining a Google key is described [here](https://developers.google.com/identity/protocols/OAuth2).
 
 ### Information & sources
 
@@ -51,5 +54,3 @@ For detailed explanation on how things work, checkout [React Native docs.](https
 React docs can be found here: [React docs.](https://reactjs.org/docs/getting-started.html)
 
 Read about Redux here [here](https://redux.js.org/introduction/getting-started) and about Redux-Saga [here.](https://redux-saga.js.org/)
-
-
